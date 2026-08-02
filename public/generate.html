@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Generate · PostReady AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="shell"></div>
+  <script src="/app.js"></script>
+  <script>
+    shell.innerHTML = appShell('generate');
+    const app = $('#appContent');
+    app.innerHTML = thinkingHTML('Loading generator');
+
+    async function init() {
+      const user = await requireAuth();
+      if (!user) return;
+      const t = await api('/api/templates');
+
+      app.innerHTML = `
+        <div class="page-head">
+          <div>
+            <span class="kicker">AI Generator</span>
+            <h1 class="main-title">Create a post package</h1>
+            <p class="muted">Credits left: <b id="creditsText">${user.credits}</b>. Use clear inputs for better output.</p>
+          </div>
+        </div>
+        <div class="grid two">
+          <div class="card">
+            <form id="form">
+              <label>Content idea</label>
+              <textarea id="content" required placeholder="Example: New JEE 2027 batch starting in Patna with demo class this Sunday"></textarea>
+              <div class="form-row">
+                <div><label>Platform</label><select id="platform"><option>Instagram</option><option>YouTube</option><option>LinkedIn</option><option>Facebook</option><option>X</option><option>WhatsApp</option></select></div>
+                <div><label>Niche</label><select id="niche"><option>Education</option><option>Coaching</option><option>Tech</option><option>Shop</option><option>Fitness</option><option>Food</option><option>Beauty</option><option>Personal Brand</option></select></div>
+              </div>
+              <div class="form-row">
+                <div><label>Language</label><select id="language"><option>English</option><option>Hindi</option><option>Hinglish</option></select></div>
+                <div><label>Goal</label><select id="goal"><option>Views</option><option>Leads</option><option>Sales</option><option>Admissions</option><option>Branding</option></select></div>
+              </div>
+              <div class="form-row">
+                <div><label>Tone</label><select id="tone"><option>Simple</option><option>Professional</option><option>Friendly</option><option>Motivational</option><option>Viral</option></select></div>
+                <div><label>Template</label><select id="template">${t.templates.map(x => `<option value="${x.value}">${x.label}</option>`).join('')}</select></div>
+              </div>
+              <div class="form-row">
+                <div><label>Audience</label><input id="audience" placeholder="students, parents, shop customers"></div>
+                <div><label>Location</label><input id="locationInput" placeholder="Patna, Bihar"></div>
+              </div>
+              <button class="btn primary" style="margin-top:16px;width:100%" type="submit">
+                <span class="btnLabel">&#10022; Generate package</span>
+              </button>
+              <p id="msg" class="error"></p>
+            </form>
+          </div>
+          <div class="card split-output">
+            <h3>Output</h3>
+            <div id="output" class="empty">Fill the form and generate. Your output will appear here.</div>
+          </div>
+        </div>`;
+      bindForm();
+    }
+
+    function bindForm() {
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const label = submitBtn.querySelector('.btnLabel');
+
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        msg.textContent = '';
+        submitBtn.disabled = true;
+        label.innerHTML = '<span class="spinner"></span> Generating';
+        output.innerHTML = thinkingHTML();
+
+        try {
+          const payload = {
+            content: content.value, platform: platform.value, niche: niche.value, language: language.value,
+            goal: goal.value, tone: tone.value, template: template.value, audience: audience.value, location: locationInput.value
+          };
+          const d = await api('/api/generate', { method: 'POST', body: JSON.stringify(payload) });
+          creditsText.textContent = d.user.credits;
+          const r = d.generation.result;
+          output.innerHTML =
+            resultSection('5 Title Options', r.titles) +
+            resultSection('3 Caption Options', r.captions) +
+            resultSection('5 Hashtags', r.hashtags.join(' ')) +
+            resultSection('10 Keywords', r.keywords) +
+            resultSection('Description', r.description) +
+            resultSection('CTA', r.cta) +
+            resultSection('Thumbnail Text Ideas', r.thumbnail) +
+            resultSection('Posting Tip', r.postingTip) +
+            resultSection('Improvement Suggestion', r.improvementSuggestion) +
+            resultSection('Why this works', r.whyThisWorks) +
+            `<div class="result"><b>Was this useful?</b><br>
+              <button class="btn primary" onclick="sendFeedback('${d.generation.id}','useful')">Useful</button>
+              <button class="btn ghost" onclick="sendFeedback('${d.generation.id}','needs improvement')">Needs improvement</button>
+            </div>`;
+        } catch (err) {
+          output.innerHTML = '<div class="empty">Generation failed. Please try again.</div>';
+          msg.textContent = err.message;
+        } finally {
+          submitBtn.disabled = false;
+          label.innerHTML = '&#10022; Generate package';
+        }
+      };
+    }
+
+    async function sendFeedback(id, rating) {
+      await api('/api/feedback', { method: 'POST', body: JSON.stringify({ generationId: id, rating }) });
+      toast('Feedback saved');
+    }
+
+    init();
+  </script>
+</body>
+</html>

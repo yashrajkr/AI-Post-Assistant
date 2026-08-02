@@ -1,0 +1,48 @@
+{
+  "name": "ai-post-assistant",
+  "version": "16.0.0-ff",
+  "description": "AI Post Assistant v16 — production-hardened SaaS for content creators. Final build (ff): Vite + React + TypeScript frontend merged onto the v16 Express backend.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "check": "node --check server.js",
+    "migrate": "node scripts/migrate-json-to-supabase.js",
+    "smoke": "node tests/smoke-test.js",
+    "test": "npm run check && npm run smoke",
+    "frontend:install": "cd frontend && npm install",
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:build": "cd frontend && npm run build",
+    "frontend:typecheck": "cd frontend && npm run typecheck",
+    "frontend:lint": "cd frontend && npm run lint"
+  },
+  "keywords": [
+    "postready",
+    "ai",
+    "saas",
+    "creator-tools",
+    "social-media"
+  ],
+  "author": "Yashraj",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "google-auth-library": "^11.0.0",
+    "helmet": "^7.1.0",
+    "multer": "^2.0.1",
+    "pdf-parse": "^1.1.1",
+    "razorpay": "^2.9.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

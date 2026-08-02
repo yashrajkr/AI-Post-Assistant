@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pricing · PostReady AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="top"></div>
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Simple pricing</span>
+        <h1 class="main-title">Choose the plan for testing</h1>
+        <p class="muted">Payment gateway runs in demo/test mode. In this prototype, selecting a plan inside the dashboard upgrades credits for testing.</p>
+      </div>
+    </div>
+    <div id="plans" class="grid four"></div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    top.innerHTML = appTopbar('pricing');
+    plans.innerHTML = thinkingHTML('Loading plans');
+    api('/api/plans').then(d => {
+      plans.innerHTML = d.plans.map(p => `
+        <div class="card">
+          <h3>${escapeHtml(p.name.toUpperCase())}</h3>
+          <h2 class="gradient-text">&#8377;${p.price}</h2>
+          <p class="muted">${p.credits} credits</p>
+          <a class="btn primary" href="/signup.html" style="width:100%">Start</a>
+        </div>`).join('');
+    }).catch(() => {
+      plans.innerHTML = '<div class="empty">Could not load plans. Please refresh.</div>';
+    });
+  </script>
+</body>
+</html>

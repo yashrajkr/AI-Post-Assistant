@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard · PostReady AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="shell"></div>
+  <script src="/app.js"></script>
+  <script>
+    shell.innerHTML = appShell('dashboard');
+    const app = $('#appContent');
+    app.innerHTML = thinkingHTML('Loading your workspace');
+
+    async function load() {
+      const user = await requireAuth();
+      if (!user) return;
+      const [plans, history, health] = await Promise.all([api('/api/plans'), api('/api/history'), api('/api/health')]);
+
+      app.innerHTML = `
+        <div class="page-head">
+          <div>
+            <span class="kicker">Workspace</span>
+            <h1 class="main-title">Welcome back, ${escapeHtml(user.name.split(' ')[0])}</h1>
+            <p class="muted">Track credits, recent outputs and your launch readiness.</p>
+          </div>
+          <a class="btn primary" href="/generate.html">&#10022; Generate post</a>
+        </div>
+
+        <div class="stats">
+          ${stat('Plan', user.plan)}
+          ${stat('Credits', user.credits)}
+          ${stat('Name', user.name)}
+          ${stat('AI Mode', health.aiProvider)}
+        </div>
+
+        <div class="grid two section">
+          <div class="card">
+            <h3>Plan testing</h3>
+            <p class="muted">Payment is demo/test mode. These buttons simulate paid plans for testing credits.</p>
+            <div class="grid two">
+              ${plans.plans.map(p => `<button class="btn ${p.name === user.plan ? 'ghost' : 'primary'}" onclick="upgrade('${p.name}')">${p.name} &middot; &#8377;${p.price}<br><span class="small">${p.credits} credits</span></button>`).join('')}
+            </div>
+          </div>
+          <div class="card">
+            <h3>Launch checklist</h3>
+            <p>&#9989; Auth works<br>&#9989; Credits work<br>&#9989; Generator works<br>&#9989; Brand voice works<br>&#9989; Scheduler works<br>&#9989; Analytics works<br>&#11036; Supabase<br>&#11036; Razorpay live<br>&#11036; Real AI key</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Recent generations</h3>
+          <div id="historyBox">${history.generations.length ? history.generations.slice(0, 8).map(g => `<div class="result"><b>${escapeHtml(g.input.platform)} &middot; ${escapeHtml(g.input.niche)}</b><br><span class="muted small">${new Date(g.createdAt).toLocaleString()}</span><br>${escapeHtml(g.result.titles?.[0] || '')}</div>`).join('') : '<div class="empty">No generations yet. Create your first post package.</div>'}</div>
+        </div>`;
+    }
+
+    async function upgrade(plan) {
+      await api('/api/upgrade', { method: 'POST', body: JSON.stringify({ plan }) });
+      toast('Plan updated');
+      load();
+    }
+
+    load();
+  </script>
+</body>
+</html>

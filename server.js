@@ -1,0 +1,137 @@
+/**
+ * server.js
+ * Bootstrap. Wires Express + middleware + routes + static + error handler.
+ *
+ * KEEP THIS FILE UNDER ~100 LINES. All business logic lives in /controllers,
+ * /services, /routes, /middleware.
+ */
+
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const cors = require('cors');
+
+const { env, startupWarnings, startupGuard } = require('./config/env');
+const { attachUser } = require('./middleware/auth');
+const { globalLimiter } = require('./middleware/rate-limits');
+const { errorHandler, notFound } = require('./middleware/error-handler');
+const buildRoutes = require('./routes');
+const { ensureDataFiles } = require('./services/storage-service');
+const logger = require('./utils/logger');
+
+// --- Fatal startup checks ---
+if (!startupGuard()) {
+  process.exit(1);
+}
+
+ensureDataFiles();
+
+const app = express();
+const PORT = env.PORT;
+const PUBLIC_DIR = path.join(__dirname, 'public');
+
+// --- CORS origin resolver ---
+// Allows: (a) configured ALLOWED_ORIGINS, (b) chrome-extension://* (any extension id)
+function corsOrigin(origin, callback) {
+  // Allow same-origin (no Origin header) and chrome-extension origins
+  if (!origin) return callback(null, true);
+  if (env.ALLOWED_ORIGINS === '*') return callback(null, true);
+  if (env.ALLOW_EXTENSION_ORIGIN && origin.startsWith('chrome-extension://')) {
+    return callback(null, true);
+  }
+  const allowed = env.ALLOWED_ORIGINS.split(',').map((s) => s.trim());
+  if (allowed.includes(origin)) return callback(null, true);
+  return callback(new Error(`CORS blocked: ${origin}`));
+}
+
+// --- Security middleware (order matters) ---
+app.disable('x-powered-by');
+app.use(
+  helmet({
+    contentSecurityPolicy: env.isProduction ? undefined : false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
+app.use(
+  cors({
+    origin: corsOrigin,
+    credentials: true,
+  })
+);
+
+// --- Webhook route MUST be registered BEFORE express.json so it gets the raw Buffer ---
+const razorpayController = require('./controllers/razorpay-controller');
+app.post(
+  '/api/razorpay/webhook',
+  express.raw({ type: 'application/json', limit: '1mb' }),
+  razorpayController.webhookHandler
+);
+
+// --- Body parsers (after webhook so the webhook still gets raw body) ---
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
+
+// --- Global rate limiter (after body parsers, before routes) ---
+app.use('/api', globalLimiter);
+
+// --- Attach user (if session cookie present) ---
+app.use(attachUser);
+
+// --- API routes ---
+buildRoutes(app);
+
+// --- Static files (frontend) ---
+app.use(express.static(PUBLIC_DIR));
+
+// --- SPA fallback: unknown non-/api routes return index.html ---
+app.get(/^\/(?!api).*/, (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'), (err) => {
+    if (err) next(err);
+  });
+});
+
+// --- 404 + error handler (last) ---
+app.use('/api', notFound);
+app.use(errorHandler);
+
+// --- Boot ---
+const server = app.listen(PORT, () => {
+  logger.info(`${env.APP_NAME} v10 running at http://localhost:${PORT}`);
+  logger.info(`AI provider: ${env.AI_PROVIDER}`);
+  logger.info(`Database: ${env.hasSupabase ? 'supabase' : 'json-file (dev only)'}`);
+  logger.info(`Razorpay: ${env.hasRazorpay ? 'configured' : 'demo mode'}`);
+  const warnings = startupWarnings();
+  if (warnings.length) {
+    logger.warn('Startup warnings:');
+    warnings.forEach((w) => logger.warn(`  - ${w}`));
+  }
+});
+
+// --- Graceful shutdown ---
+function shutdown(signal) {
+  logger.info(`${signal} received. Shutting down gracefully...`);
+  server.close(() => {
+    logger.info('Server closed.');
+    process.exit(0);
+  });
+  // Force-exit after 10s if connections don't drain.
+  setTimeout(() => {
+    logger.warn('Forcing exit after 10s timeout.');
+    process.exit(1);
+  }, 10000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+// --- Unhandled error logging (don't crash process) ---
+process.on('unhandledRejection', (reason) => {
+  logger.error('[unhandledRejection]', { reason: reason?.message || String(reason) });
+});
+process.on('uncaughtException', (err) => {
+  logger.error('[uncaughtException]', { message: err.message, stack: err.stack?.split('\n').slice(0, 5).join(' | ') });
+});
+
+module.exports = app;

@@ -1,0 +1,65 @@
+# Render deployment config
+# Docs: https://render.com/docs/blueprint-spec
+# This file lets you deploy with one click via "New > Blueprint" on Render.
+
+services:
+  - type: web
+    name: ai-post-assistant-backend
+    runtime: node
+    plan: free  # upgrade to 'starter' for production ($7/mo, no sleep)
+    region: singapore  # closest to India; change if needed
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AI_PROVIDER
+        value: openai
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: GEMINI_MODEL
+        value: gemini-1.5-flash
+      - key: AI_TIMEOUT_MS
+        value: "30000"
+      - key: AI_MAX_RETRIES
+        value: "3"
+      - key: ALLOWED_ORIGINS
+        # Replace with your Vercel frontend URL after deploying frontend.
+        # Chrome extension access is handled separately by ALLOW_EXTENSION_ORIGIN below
+        # (exact-string ALLOWED_ORIGINS matching can't wildcard chrome-extension:// IDs).
+        value: https://your-frontend.vercel.app
+      - key: ALLOW_EXTENSION_ORIGIN
+        value: "true"
+      - key: SESSION_SECRET
+        generateValue: true  # Render auto-generates a secure random value
+      - key: OPENAI_API_KEY
+        sync: false  # set manually in Render dashboard
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROK_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false  # optional — "Continue with Google", see docs/GOOGLE_AUTH_SETUP.md
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        # Replace with your real Render URL once deployed, e.g.
+        # https://ai-post-assistant-backend.onrender.com/api/auth/google/callback
+        value: https://your-backend.onrender.com/api/auth/google/callback
+      - key: FRONTEND_URL
+        # Replace with your Vercel frontend URL
+        value: https://your-frontend.vercel.app

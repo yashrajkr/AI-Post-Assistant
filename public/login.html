@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Login · PostReady AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="top"></div>
+  <main class="auth-wrap">
+    <div class="orb o1" style="top:-100px;left:-100px"></div>
+    <div class="orb o2" style="bottom:-120px;right:-80px"></div>
+    <div class="card auth-card">
+      <span class="kicker">Welcome back</span>
+      <h2 class="main-title">Login</h2>
+      <form id="form">
+        <label>Email</label>
+        <input id="email" type="email" required autocomplete="email">
+        <label>Password</label>
+        <input id="password" type="password" required autocomplete="current-password">
+        <button class="btn primary" style="margin-top:16px;width:100%" type="submit">
+          <span class="btnLabel">Login</span>
+        </button>
+        <p id="msg" class="error"></p>
+      </form>
+      <p class="muted">No account? <a href="/signup.html"><b>Create one</b></a></p>
+    </div>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    top.innerHTML = appTopbar();
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const label = submitBtn.querySelector('.btnLabel');
+      submitBtn.disabled = true;
+      label.innerHTML = '<span class="spinner"></span> Logging in';
+      try {
+        await api('/api/login', { method: 'POST', body: JSON.stringify({ email: email.value, password: password.value }) });
+        location.href = '/dashboard.html';
+      } catch (err) {
+        msg.textContent = err.message;
+        submitBtn.disabled = false;
+        label.textContent = 'Login';
+      }
+    };
+  </script>
+</body>
+</html>

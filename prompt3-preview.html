@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Prompt 3 — Feature Modules Preview · AI Post Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090B;
+      --surface: #111827;
+      --surface-2: #1F2937;
+      --border: #27272A;
+      --text: #FAFAFA;
+      --text-muted: #A1A1AA;
+      --primary: #6366F1;
+      --primary-hover: #4F46E1;
+      --secondary: #A855F7;
+      --accent: #06B6D4;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --error: #EF4444;
+      --gradient: linear-gradient(135deg, #6366F1 0%, #A855F7 50%, #06B6D4 100%);
+      --glass-bg: rgba(17, 24, 39, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    .display { font-family: 'Sora', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Layout */
+    .app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+    @media (max-width: 900px) { .app { grid-template-columns: 1fr; } }
+
+    /* Sidebar */
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      padding: 24px 16px;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    }
+    @media (max-width: 900px) { .sidebar { position: relative; height: auto; } }
+    .brand { display: flex; align-items: center; gap: 8px; font-family: 'Sora'; font-weight: 700; font-size: 18px; margin-bottom: 24px; padding: 0 8px; }
+    .brand-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--gradient); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; }
+    .brand .ai { background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 12px 8px 6px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px; cursor: pointer;
+      color: var(--text-muted); font-size: 14px; font-weight: 500;
+      transition: all 0.15s; text-decoration: none;
+    }
+    .nav-item:hover { background: var(--surface-2); color: var(--text); }
+    .nav-item.active { background: var(--surface-2); color: var(--text); }
+    .nav-item .num { width: 22px; height: 22px; border-radius: 6px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+    .nav-item.active .num { background: var(--primary); color: #fff; }
+    .nav-item .icon { width: 16px; height: 16px; }
+
+    /* Main */
+    .main { padding: 32px 40px; max-width: 1100px; }
+    @media (max-width: 600px) { .main { padding: 20px; } }
+
+    .header { margin-bottom: 32px; }
+    .kicker { display: inline-block; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--text-muted); font-size: 11px; font-weight: 600; margin-bottom: 12px; }
+    .title { font-family: 'Sora'; font-weight: 700; font-size: 32px; line-height: 1.1; margin-bottom: 8px; }
+    .gradient-text { background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .subtitle { color: var(--text-muted); font-size: 15px; max-width: 600px; }
+
+    /* Sections */
+    .section { display: none; animation: fadeUp 0.4s ease; }
+    .section.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-head { margin-bottom: 24px; }
+    .section-head h2 { font-family: 'Sora'; font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .section-head p { color: var(--text-muted); font-size: 14px; max-width: 600px; }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; transition: all 0.2s; }
+    .card:hover { border-color: var(--text-muted); }
+    .card.glow { box-shadow: 0 0 30px -5px rgba(99, 102, 241, 0.3); border-color: var(--primary); }
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 700px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; font-family: inherit; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    .btn-gradient { background: var(--gradient); color: #fff; background-size: 200% auto; }
+    .btn-gradient:hover { background-position: right center; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .badge-primary { background: rgba(99, 102, 241, 0.15); color: var(--primary); }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .badge-secondary { background: var(--surface-2); color: var(--text-muted); }
+    .badge-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+
+    /* Inputs */
+    .input, .textarea, .select { width: 100%; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-size: 14px; font-family: inherit; }
+    .input:focus, .textarea:focus, .select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+    .textarea { resize: vertical; min-height: 80px; }
+    .label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+
+    /* ============= MODULE 1: AI BRAND BRAIN ============= */
+    .brand-brain-form { display: grid; gap: 16px; }
+    .tone-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+    .chip:hover { border-color: var(--text-muted); }
+    .chip.active { background: rgba(99, 102, 241, 0.15); border-color: var(--primary); color: var(--primary); }
+    .voice-preview { background: var(--surface-2); border-radius: 12px; padding: 16px; border-left: 3px solid var(--primary); }
+    .voice-preview .label { color: var(--primary); margin-bottom: 8px; }
+
+    /* ============= MODULE 2: AI CONTENT SCORE ============= */
+    .score-grid { display: grid; gap: 12px; }
+    .score-row { display: flex; align-items: center; gap: 12px; }
+    .score-label { width: 120px; font-size: 13px; font-weight: 500; }
+    .score-bar { flex: 1; height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 999px; background: var(--gradient); transition: width 1s ease; }
+    .score-fill.low { background: var(--error); }
+    .score-fill.mid { background: var(--warning); }
+    .score-value { width: 50px; text-align: right; font-family: 'JetBrains Mono'; font-size: 13px; font-weight: 600; }
+    .score-total { display: flex; align-items: baseline; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .score-total .big { font-family: 'Sora'; font-size: 36px; font-weight: 800; }
+    .score-total .max { color: var(--text-muted); font-size: 18px; }
+
+    /* ============= MODULE 3: AI MEMORY ============= */
+    .memory-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; background: var(--surface-2); }
+    .memory-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(99, 102, 241, 0.15); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .memory-content { flex: 1; }
+    .memory-key { font-size: 13px; font-weight: 600; }
+    .memory-value { font-size: 12px; color: var(--text-muted); }
+    .memory-delete { color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; }
+    .memory-delete:hover { color: var(--error); background: rgba(239, 68, 68, 0.1); }
+
+    /* ============= MODULE 4: PROMPT LIBRARY ============= */
+    .prompt-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+    .prompt-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .prompt-card .head { display: flex; align-items: start; justify-content: space-between; margin-bottom: 8px; }
+    .prompt-card h4 { font-size: 14px; font-weight: 600; }
+    .prompt-card .desc { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+    .prompt-card .body { font-family: 'JetBrains Mono'; font-size: 11px; color: var(--text-muted); background: var(--surface-2); padding: 8px; border-radius: 6px; white-space: pre-wrap; max-height: 60px; overflow: hidden; }
+
+    /* ============= MODULE 5: IMAGE UNDERSTANDING ============= */
+    .upload-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 40px 20px; text-align: center; transition: all 0.2s; cursor: pointer; }
+    .upload-zone:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
+    .upload-zone .icon { font-size: 32px; margin-bottom: 8px; }
+    .image-preview { width: 100%; height: 180px; border-radius: 12px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .image-preview .placeholder { color: var(--text-muted); font-size: 13px; }
+    .image-output { background: var(--surface-2); border-radius: 8px; padding: 10px; font-size: 12px; margin-bottom: 6px; }
+    .image-output .key { color: var(--text-muted); margin-bottom: 2px; }
+
+    /* ============= MODULE 6: AI REPURPOSER ============= */
+    .repurpose-source { background: var(--surface-2); border-radius: 12px; padding: 16px; border-left: 3px solid var(--accent); }
+    .repurpose-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    @media (max-width: 600px) { .repurpose-grid { grid-template-columns: 1fr; } }
+    .repurpose-card { background: var(--surface-2); border-radius: 10px; padding: 12px; border: 1px solid var(--border); }
+    .repurpose-card .platform { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+    .repurpose-card .preview { font-size: 11px; color: var(--text-muted); line-height: 1.5; max-height: 70px; overflow: hidden; }
+
+    /* ============= MODULE 7: MULTI-PLATFORM ============= */
+    .multi-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; overflow-x: auto; }
+    .multi-tab { padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.15s; }
+    .multi-tab:hover { color: var(--text); }
+    .multi-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .multi-content { background: var(--surface-2); border-radius: 12px; padding: 16px; min-height: 120px; }
+    .multi-content h4 { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+    .multi-content p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    /* Roadmap strip */
+    .roadmap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 24px; }
+    .roadmap h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+    .roadmap-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .roadmap-item { padding: 6px 10px; border-radius: 6px; background: var(--surface-2); font-size: 12px; color: var(--text-muted); }
+    .roadmap-item.done { color: var(--success); }
+    .roadmap-item.now { color: var(--primary); border: 1px solid var(--primary); }
+    .roadmap-item.next { color: var(--text-muted); }
+
+    /* Footer note */
+    .note { background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 16px; margin-top: 24px; font-size: 13px; color: var(--text-muted); }
+    .note strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">P</span>
+        PostReady <span class="ai">AI</span>
+      </div>
+
+      <div class="nav-label">Prompt 3 — Modules</div>
+      <a class="nav-item active" data-section="overview"><span class="num">0</span> Overview</a>
+      <a class="nav-item" data-section="m1"><span class="num">1</span> AI Brand Brain</a>
+      <a class="nav-item" data-section="m2"><span class="num">2</span> AI Content Score</a>
+      <a class="nav-item" data-section="m3"><span class="num">3</span> AI Memory</a>
+      <a class="nav-item" data-section="m4"><span class="num">4</span> Prompt Library</a>
+      <a class="nav-item" data-section="m5"><span class="num">5</span> Image Understanding</a>
+      <a class="nav-item" data-section="m6"><span class="num">6</span> AI Repurposer</a>
+      <a class="nav-item" data-section="m7"><span class="num">7</span> Multi-Platform Gen</a>
+
+      <div class="nav-label">Reference</div>
+      <a class="nav-item" data-section="roadmap"><span class="num">→</span> Roadmap</a>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="header">
+        <span class="kicker">✨ Prompt 3 — Feature Modules Preview</span>
+        <h1 class="title">7 modules that turn this into an <span class="gradient-text">AI Content OS</span></h1>
+        <p class="subtitle">Interactive preview of every feature module in the trimmed Prompt 3. Each section shows what the feature does, how it looks, and what API endpoints it needs.</p>
+      </div>
+
+      <!-- ===== OVERVIEW ===== -->
+      <section class="section active" id="overview">
+        <div class="section-head">
+          <h2>What you're getting</h2>
+          <p>7 production-ready modules, sequenced by priority. Each takes 3–7 days to build. Total: 4–6 weeks part-time.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="card glow">
+            <span class="badge badge-primary">Phase A · Differentiator</span>
+            <h3 style="font-family:Sora;font-size:18px;margin:10px 0 6px;">AI Brand Brain</h3>
+            <p style="font-size:13px;color:var(--text-muted);">Teach the AI your tone, niche, audience, and CTA style once. Every generation becomes personalized.</p>
+          </div>
+          <div class="card">
+            <span class="badge badge-primary">Phase A · Signature feature</span>
+            <h3 style="font-family:Sora;font-size:18px;margin:10px 0 6px;">AI Content Score</h3>
+            <p style="font-size:13px;color:var(--text-muted);">Score every post on Hook, SEO, CTA, Readability, Virality, Emotion. AI suggests improvements.</p>
+          </div>
+          <div class="card">
+            <span class="badge badge-primary">Phase A · Personalization</span>
+            <h3 style="font-family:Sora;font-size:18px;margin:10px 0 6px;">AI Memory</h3>
+            <p style="font-size:13px;color:var(--text-muted);">Remember preferred hashtags, tones, niches, CTAs across sessions. Avoids duplicate suggestions.</p>
+          </div>
+          <div class="card">
+            <span class="badge badge-secondary">Phase A · Easy win</span>
+            <h3 style="font-family:Sora;font-size:18px;margin:10px 0 6px;">Prompt Library</h3>
+            <p style="font-size:13px;color:var(--text-muted);">Save and reuse your best prompts. Bookmark community prompts. 1-click apply.</p>
+          </div>
+          <div class="card">
+            <span class="badge badge-warning">Phase B · High value</span>
+            <h3 style="font-family:Sora;font-size:18px;margin:10px 0 6px;">Image Understanding</h3>
+            <p style="font-size:13px;color:var(--text-muted);">Upload any image. AI generates caption, alt text, hashtags, hook, CTA. Requires vision AI.</p>
+          </div>
+          <div class="card">
+            <span class="badge badge-warning">Phase B · High value</span>
+            <h3 style="font-family:Sora;font-size:18px;margin:10px 0 6px;">AI Repurposer</h3>
+            <p style="font-size:13px;color:var(--text-muted);">One input → 6 platform outputs (IG, LinkedIn, X, Facebook, WhatsApp, YouTube).</p>
+          </div>
+          <div class="card">
+            <span class="badge badge-secondary">Phase B · Easy win</span>
+            <h3 style="font-family:Sora;font-size:18px;margin:10px 0 6px;">Multi-Platform Generation</h3>
+            <p style="font-size:13px;color:var(--text-muted);">Generate for all platforms at once with tabbed output view.</p>
+          </div>
+          <div class="card" style="background:rgba(99, 102, 241, 0.05);border-color:rgba(99, 102, 241, 0.3);">
+            <span class="badge badge-outline">Deferred to v2</span>
+            <h3 style="font-family:Sora;font-size:18px;margin:10px 0 6px;">Not in Prompt 3</h3>
+            <p style="font-size:13px;color:var(--text-muted);">Video understanding, Document-to-content, Calendar, Campaign Builder, Competitor Analysis, Team Workspace, Brand Health, Marketplace.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== MODULE 1: AI BRAND BRAIN ===== -->
+      <section class="section" id="m1">
+        <div class="section-head">
+          <h2>1. AI Brand Brain</h2>
+          <p>Teach the AI your unique voice once. Every generation afterwards matches your tone, audience, and CTA style.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3 style="font-family:Sora;font-size:16px;margin-bottom:14px;">Teach your AI</h3>
+            <div class="brand-brain-form">
+              <div>
+                <label class="label">Brand name</label>
+                <input class="input" value="Yashraj AI Academy" />
+              </div>
+              <div>
+                <label class="label">Tagline</label>
+                <input class="input" value="AI learning made simple for Indian students" />
+              </div>
+              <div>
+                <label class="label">Niche</label>
+                <input class="input" value="AI education · JEE/NEET coaching" />
+              </div>
+              <div>
+                <label class="label">Target audience</label>
+                <input class="input" value="Indian students aged 16–22 preparing for competitive exams" />
+              </div>
+              <div>
+                <label class="label">Tone (multi-select)</label>
+                <div class="tone-chips">
+                  <span class="chip active">Educational</span>
+                  <span class="chip active">Friendly</span>
+                  <span class="chip">Luxury</span>
+                  <span class="chip active">Practical</span>
+                  <span class="chip">Bold</span>
+                  <span class="chip">Funny</span>
+                  <span class="chip">Minimal</span>
+                </div>
+              </div>
+              <div>
+                <label class="label">CTA style</label>
+                <select class="select"><option>Direct ("DM ADMISSION")</option><option>Soft ("Follow for more")</option><option>Question ("Comment READY?")</option></select>
+              </div>
+              <div>
+                <label class="label">Vocabulary to avoid</label>
+                <input class="input" placeholder="e.g. cheap, free, hype" value="hype, bro, sigma" />
+              </div>
+              <button class="btn btn-gradient" style="justify-content:center;">🧠 Save Brand Brain</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="font-family:Sora;font-size:16px;margin-bottom:14px;">Live voice preview</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Whenever the AI generates content, it'll match this voice:</p>
+            <div class="voice-preview">
+              <div class="label">SAMPLE CAPTION</div>
+              <p style="font-size:14px;line-height:1.6;">New JEE 2027 batch starts Sunday in Patna 🎓<br><br>Yashraj AI Academy makes AI learning simple for Indian students. Practical, friendly, no fluff.<br><br>Comment "ADMISSION" for batch details.</p>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="badge badge-success">✓ Tone: Educational</span>
+              <span class="badge badge-success">✓ Audience matched</span>
+              <span class="badge badge-success">✓ CTA: Direct</span>
+              <span class="badge badge-success">✓ No banned words</span>
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          <strong>Backend changes needed:</strong> New <code class="mono">brand_brain</code> column on users table (JSONB). New <code class="mono">PUT /api/brand-brain</code> endpoint. AI prompt builder reads brand brain and injects tone rules.
+        </div>
+      </section>
+
+      <!-- ===== MODULE 2: AI CONTENT SCORE ===== -->
+      <section class="section" id="m2">
+        <div class="section-head">
+          <h2>2. AI Content Score</h2>
+          <p>Every generated post gets a score across 6 dimensions. The AI tells you exactly what to improve.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3 style="font-family:Sora;font-size:16px;margin-bottom:14px;">Score breakdown</h3>
+            <div class="score-grid">
+              <div class="score-row">
+                <div class="score-label">🪝 Hook</div>
+                <div class="score-bar"><div class="score-fill" style="width:92%"></div></div>
+                <div class="score-value">92</div>
+              </div>
+              <div class="score-row">
+                <div class="score-label">🔍 SEO</div>
+                <div class="score-bar"><div class="score-fill" style="width:84%"></div></div>
+                <div class="score-value">84</div>
+              </div>
+              <div class="score-row">
+                <div class="score-label">📣 CTA</div>
+                <div class="score-bar"><div class="score-fill mid" style="width:71%"></div></div>
+                <div class="score-value">71</div>
+              </div>
+              <div class="score-row">
+                <div class="score-label">📖 Readability</div>
+                <div class="score-bar"><div class="score-fill" style="width:95%"></div></div>
+                <div class="score-value">95</div>
+              </div>
+              <div class="score-row">
+                <div class="score-label">🔥 Virality</div>
+                <div class="score-bar"><div class="score-fill" style="width:88%"></div></div>
+                <div class="score-value">88</div>
+              </div>
+              <div class="score-row">
+                <div class="score-label">💝 Emotion</div>
+                <div class="score-bar"><div class="score-fill" style="width:90%"></div></div>
+                <div class="score-value">90</div>
+              </div>
+            </div>
+            <div class="score-total">
+              <span class="big gradient-text">87</span>
+              <span class="max">/ 100</span>
+              <span class="badge badge-success" style="margin-left:auto;">Top 15%</span>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="font-family:Sora;font-size:16px;margin-bottom:14px;">AI improvement suggestions</h3>
+            <div style="display:grid;gap:10px;">
+              <div style="background:var(--surface-2);border-radius:8px;padding:12px;border-left:3px solid var(--warning);">
+                <div style="font-size:12px;color:var(--warning);font-weight:600;margin-bottom:4px;">CTA · 71/100</div>
+                <p style="font-size:13px;">Your CTA "DM us" is generic. Try a specific trigger like "Comment ADMISSION for batch details" — increases engagement ~30%.</p>
+              </div>
+              <div style="background:var(--surface-2);border-radius:8px;padding:12px;border-left:3px solid var(--success);">
+                <div style="font-size:12px;color:var(--success);font-weight:600;margin-bottom:4px;">Hook · 92/100</div>
+                <p style="font-size:13px;">Strong curiosity hook. The "Nobody tells you..." pattern works well for student audiences.</p>
+              </div>
+              <div style="background:var(--surface-2);border-radius:8px;padding:12px;border-left:3px solid var(--accent);">
+                <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:4px;">SEO · 84/100</div>
+                <p style="font-size:13px;">Add 2 more niche-specific hashtags (#JEEMains #PatnaCoaching) to boost discoverability.</p>
+              </div>
+            </div>
+            <button class="btn btn-gradient" style="width:100%;margin-top:14px;justify-content:center;">✨ Apply all suggestions</button>
+          </div>
+        </div>
+        <div class="note">
+          <strong>Backend changes needed:</strong> New <code class="mono">score</code> field on generations table (JSONB). AI prompt returns scores + suggestions. New <code class="mono">POST /api/score</code> endpoint for re-scoring edited content.
+        </div>
+      </section>
+
+      <!-- ===== MODULE 3: AI MEMORY ===== -->
+      <section class="section" id="m3">
+        <div class="section-head">
+          <h2>3. AI Memory</h2>
+          <p>The AI remembers what you've used before — preferred hashtags, repeated tones, common niches — and avoids suggesting duplicates.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3 style="font-family:Sora;font-size:16px;margin-bottom:14px;">What AI remembers about you</h3>
+            <div style="display:grid;gap:8px;">
+              <div class="memory-item">
+                <div class="memory-icon">🏷️</div>
+                <div class="memory-content">
+                  <div class="memory-key">Most used hashtags</div>
+                  <div class="memory-value">#JEEMains · #Patna · #AI · #Education · #StudyTips</div>
+                </div>
+                <span class="memory-delete">✕</span>
+              </div>
+              <div class="memory-item">
+                <div class="memory-icon">🎨</div>
+                <div class="memory-content">
+                  <div class="memory-key">Preferred tone</div>
+                  <div class="memory-value">Educational + Friendly (used 23×)</div>
+                </div>
+                <span class="memory-delete">✕</span>
+              </div>
+              <div class="memory-item">
+                <div class="memory-icon">📍</div>
+                <div class="memory-content">
+                  <div class="memory-key">Default location</div>
+                  <div class="memory-value">Patna, India</div>
+                </div>
+                <span class="memory-delete">✕</span>
+              </div>
+              <div class="memory-item">
+                <div class="memory-icon">📣</div>
+                <div class="memory-content">
+                  <div class="memory-key">Favorite CTA</div>
+                  <div class="memory-value">"Comment ADMISSION for details"</div>
+                </div>
+                <span class="memory-delete">✕</span>
+              </div>
+              <div class="memory-item">
+                <div class="memory-icon">👥</div>
+                <div class="memory-content">
+                  <div class="memory-key">Default audience</div>
+                  <div class="memory-value">JEE aspirants aged 16–22</div>
+                </div>
+                <span class="memory-delete">✕</span>
+              </div>
+              <div class="memory-item">
+                <div class="memory-icon">⏰</div>
+                <div class="memory-content">
+                  <div class="memory-key">Best posting time</div>
+                  <div class="memory-value">7–9 PM IST (based on past activity)</div>
+                </div>
+                <span class="memory-delete">✕</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="font-family:Sora;font-size:16px;margin-bottom:14px;">Smart deduplication</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">When you generate again, the AI avoids repeating what you've already used:</p>
+            <div style="background:var(--surface-2);border-radius:10px;padding:14px;">
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">PREVIOUSLY GENERATED (last 30 days)</div>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+                <div style="display:flex;justify-content:space-between;padding:6px 8px;background:rgba(239,68,68,0.05);border-radius:6px;">
+                  <span>"New JEE batch in Patna..."</span>
+                  <span class="badge badge-warning" style="font-size:10px;">Used 3×</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 8px;background:rgba(239,68,68,0.05);border-radius:6px;">
+                  <span>"JEE 2027 admission open..."</span>
+                  <span class="badge badge-warning" style="font-size:10px;">Used 2×</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:6px 8px;background:rgba(16,185,129,0.05);border-radius:6px;">
+                  <span>"Top 5 study tips for JEE..."</span>
+                  <span class="badge badge-success" style="font-size:10px;">Fresh idea</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:14px;padding:12px;background:rgba(99,102,241,0.05);border-radius:8px;font-size:13px;color:var(--text-muted);">
+              💡 <strong style="color:var(--text);">Smart tip:</strong> AI will suggest fresh angles for "JEE batch" topics since you've used them 5× already.
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          <strong>Backend changes needed:</strong> New <code class="mono">ai_memory</code> table (user_id, key, value, frequency, last_used). Auto-updated after every generation. AI prompt builder reads memory and avoids duplicates.
+        </div>
+      </section>
+
+      <!-- ===== MODULE 4: PROMPT LIBRARY ===== -->
+      <section class="section" id="m4">
+        <div class="section-head">
+          <h2>4. Prompt Library</h2>
+          <p>Save your best prompts. Reuse them with 1 click. Browse community prompts. Bookmark favorites.</p>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm">⭐ My prompts (8)</button>
+          <button class="btn btn-ghost btn-sm">🔥 Trending</button>
+          <button class="btn btn-ghost btn-sm">🎓 Education</button>
+          <button class="btn btn-ghost btn-sm">💼 Business</button>
+          <button class="btn btn-ghost btn-sm">🏋️ Fitness</button>
+          <button class="btn btn-ghost btn-sm">🍴 Food</button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto;">+ New prompt</button>
+        </div>
+        <div class="grid grid-3">
+          <div class="prompt-card">
+            <div class="head">
+              <h4>Viral Hook Generator</h4>
+              <span class="badge badge-success">⭐ 4.9</span>
+            </div>
+            <p class="desc">Generate 10 curiosity-driven hooks for any topic.</p>
+            <div class="body">"Generate 10 viral hooks for {topic}. Use patterns: 'Nobody tells you...', 'I wasted 3 years...'"</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+              <span class="badge badge-outline">Used 142×</span>
+              <button class="btn btn-primary btn-sm">Use</button>
+            </div>
+          </div>
+          <div class="prompt-card">
+            <div class="head">
+              <h4>Educational Carousel</h4>
+              <span class="badge badge-success">⭐ 4.8</span>
+            </div>
+            <p class="desc">Turn any topic into a 5-slide educational carousel.</p>
+            <div class="body">"Create a 5-slide educational carousel about {topic}. Slide 1: Hook, Slides 2–4: Tips, Slide 5: CTA..."</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+              <span class="badge badge-outline">Used 98×</span>
+              <button class="btn btn-primary btn-sm">Use</button>
+            </div>
+          </div>
+          <div class="prompt-card">
+            <div class="head">
+              <h4>Festival Post Pack</h4>
+              <span class="badge badge-success">⭐ 4.7</span>
+            </div>
+            <p class="desc">Generate festival-themed posts for Indian audiences.</p>
+            <div class="body">"Create a {festival} post for {brand}. Include greeting, offer, and cultural reference. Tone: warm..."</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+              <span class="badge badge-outline">Used 76×</span>
+              <button class="btn btn-primary btn-sm">Use</button>
+            </div>
+          </div>
+          <div class="prompt-card">
+            <div class="head">
+              <h4>Result Announcement</h4>
+              <span class="badge badge-success">⭐ 4.9</span>
+            </div>
+            <p class="desc">Announce student results with social proof.</p>
+            <div class="body">"Create a result announcement post for {student_name} who scored {score} in {exam}. Tone: proud..."</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+              <span class="badge badge-outline">Used 64×</span>
+              <button class="btn btn-primary btn-sm">Use</button>
+            </div>
+          </div>
+          <div class="prompt-card">
+            <div class="head">
+              <h4>LinkedIn Authority Post</h4>
+              <span class="badge badge-success">⭐ 4.6</span>
+            </div>
+            <p class="desc">Build authority on LinkedIn with thought-leadership posts.</p>
+            <div class="body">"Write a LinkedIn authority post about {topic}. Structure: personal story → insight → lesson → CTA..."</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+              <span class="badge badge-outline">Used 51×</span>
+              <button class="btn btn-primary btn-sm">Use</button>
+            </div>
+          </div>
+          <div class="prompt-card">
+            <div class="head">
+              <h4>Reel Script (30s)</h4>
+              <span class="badge badge-success">⭐ 4.8</span>
+            </div>
+            <p class="desc">Generate a 30-second Reel script with hook + body + CTA.</p>
+            <div class="body">"Create a 30-second Instagram Reel script about {topic}. Include: hook (3s), body (20s), CTA (7s)..."</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+              <span class="badge badge-outline">Used 47×</span>
+              <button class="btn btn-primary btn-sm">Use</button>
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          <strong>Backend changes needed:</strong> New <code class="mono">prompts</code> table (id, user_id, title, body, category, is_public, uses_count, avg_rating). New endpoints: <code class="mono">GET /api/prompts</code>, <code class="mono">POST /api/prompts</code>, <code class="mono">POST /api/prompts/:id/use</code>.
+        </div>
+      </section>
+
+      <!-- ===== MODULE 5: IMAGE UNDERSTANDING ===== -->
+      <section class="section" id="m5">
+        <div class="section-head">
+          <h2>5. Image Understanding</h2>
+          <p>Upload any image. The AI analyzes it and generates caption, alt text, hashtags, hook, and CTA.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3 style="font-family:Sora;font-size:16px;margin-bottom:14px;">Upload image</h3>
+            <div class="upload-zone">
+              <div class="icon">📸</div>
+              <p style="font-size:14px;font-weight:600;margin-bottom:4px;">Drop image here or click to upload</p>
+              <p style="font-size:12px;color:var(--text-muted);">PNG, JPG, WEBP · Max 5MB</p>
+            </div>
+            <div style="margin-top:14px;">
+              <div class="image-preview" style="background:linear-gradient(135deg, #6366F1 0%, #A855F7 50%, #06B6D4 100%);">
+                <div style="color:#fff;font-size:13px;font-weight:600;text-align:center;padding:20px;">
+                  🎓 Sample: Students celebrating JEE results<br>
+                  <span style="font-size:11px;opacity:0.8;">image_uploaded.jpg · 1.2MB</span>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-gradient" style="width:100%;margin-top:14px;justify-content:center;">✨ Analyze image</button>
+          </div>
+          <div class="card">
+            <h3 style="font-family:Sora;font-size:16px;margin-bottom:14px;">AI-generated output</h3>
+            <div style="display:grid;gap:8px;">
+              <div class="image-output">
+                <div class="key">📝 CAPTION</div>
+                <div>Huge congratulations to our 2027 batch! 🎓 47 students qualified JEE Mains from our Patna center. Your hard work paid off! 💪</div>
+              </div>
+              <div class="image-output">
+                <div class="key">🪝 HOOK</div>
+                <div>"47 dreams. One batch. Countless sacrifices."</div>
+              </div>
+              <div class="image-output">
+                <div class="key">🏷️ HASHTAGS</div>
+                <div>#JEEMains #Results #Patna #Education #Success #StudentLife</div>
+              </div>
+              <div class="image-output">
+                <div class="key">📝 ALT TEXT</div>
+                <div>Group of Indian students in school uniforms celebrating with raised arms, holding exam results</div>
+              </div>
+              <div class="image-output">
+                <div class="key">📣 CTA</div>
+                <div>Comment "BATCH" to join our next JEE 2028 program.</div>
+              </div>
+              <div class="image-output">
+                <div class="key">🔍 KEYWORDS</div>
+                <div>JEE, results, celebration, students, education, Patna, success</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:12px;">
+              <button class="btn btn-primary btn-sm" style="flex:1;">Copy all</button>
+              <button class="btn btn-ghost btn-sm">Save</button>
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          <strong>Backend changes needed:</strong> Use OpenAI GPT-4 Vision API (or Gemini Pro Vision). New <code class="mono">POST /api/analyze-image</code> endpoint accepting multipart/form-data. Image stored in Supabase Storage. Returns same shape as <code class="mono">/api/generate</code> + <code class="mono">altText</code>.
+        </div>
+      </section>
+
+      <!-- ===== MODULE 6: AI REPURPOSER ===== -->
+      <section class="section" id="m6">
+        <div class="section-head">
+          <h2>6. AI Repurposer</h2>
+          <p>One input → 6 platform-optimized outputs. Stop rewriting the same content for every platform.</p>
+        </div>
+        <div class="card" style="margin-bottom:16px;">
+          <h3 style="font-family:Sora;font-size:16px;margin-bottom:10px;">Source content</h3>
+          <div class="repurpose-source">
+            <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:6px;">📋 ORIGINAL (YouTube video description)</div>
+            <p style="font-size:14px;line-height:1.6;">In this video, I explain how AI is changing the way Indian students prepare for JEE. We cover 5 practical AI tools that save 10+ hours per week, plus a free study planner template. Whether you're in Class 11, 12, or taking a drop year, these tools will help you study smarter, not harder.</p>
+          </div>
+          <button class="btn btn-gradient" style="margin-top:12px;">✨ Repurpose to all platforms</button>
+        </div>
+        <div class="repurpose-grid">
+          <div class="repurpose-card">
+            <div class="platform">📸 Instagram Caption</div>
+            <div class="preview">5 AI tools every JEE aspirant MUST use 🤯<br><br>Save 10+ hours every week with these:<br>1. AI study planner<br>2. Smart notes<br>3. ...<br><br>Comment "AI" for the free template 📥</div>
+          </div>
+          <div class="repurpose-card">
+            <div class="platform">💼 LinkedIn Post</div>
+            <div class="preview">AI is revolutionizing JEE preparation in India.<br><br>After working with 1000+ students, here are 5 AI tools that consistently save 10+ hours per week:<br><br>1. AI-powered study planners that adapt to your weak areas...</div>
+          </div>
+          <div class="repurpose-card">
+            <div class="platform">✕ X (Twitter) Thread</div>
+            <div class="preview">🧵 5 AI tools every JEE aspirant should use (saves 10+ hrs/week):<br><br>1/ AI study planner — adapts to your weak areas<br>2/ Smart notes — auto-summarizes lectures<br>3/ ...</div>
+          </div>
+          <div class="repurpose-card">
+            <div class="platform">👥 Facebook Post</div>
+            <div class="preview">Parents of JEE aspirants — this is for you! 🎓<br><br>AI tools can help your child study smarter. In this video, I share 5 tools that save 10+ hours per week. Plus a free study planner template...</div>
+          </div>
+          <div class="repurpose-card">
+            <div class="platform">💬 WhatsApp Message</div>
+            <div class="preview">🎓 *5 AI tools for JEE prep* 🎓<br><br>Save 10+ hours/week with these tools 📚<br><br>👉 Watch full video: [link]<br>👉 Free template: Comment "AI"</div>
+          </div>
+          <div class="repurpose-card">
+            <div class="platform">▶️ YouTube Short Title</div>
+            <div class="preview">5 AI Tools EVERY JEE Aspirant MUST Use (Saves 10+ Hours!) 🤯📚</div>
+          </div>
+        </div>
+        <div class="note">
+          <strong>Backend changes needed:</strong> New <code class="mono">POST /api/repurpose</code> endpoint. Accepts <code class="mono">{ sourceContent, platforms: [] }</code>. Returns array of platform-specific outputs. Uses same AI provider chain as <code class="mono">/api/generate</code>.
+        </div>
+      </section>
+
+      <!-- ===== MODULE 7: MULTI-PLATFORM GENERATION ===== -->
+      <section class="section" id="m7">
+        <div class="section-head">
+          <h2>7. Multi-Platform Generation</h2>
+          <p>Generate for all platforms at once. Tabbed output view shows each platform's optimized version side-by-side.</p>
+        </div>
+        <div class="card" style="margin-bottom:16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div>
+              <label class="label">Content idea</label>
+              <input class="input" value="How to stay motivated during JEE preparation" />
+            </div>
+            <div>
+              <label class="label">Tone</label>
+              <select class="select"><option>Educational</option><option>Motivational</option><option>Practical</option></select>
+            </div>
+          </div>
+          <button class="btn btn-gradient" style="width:100%;justify-content:center;">✨ Generate for all 6 platforms</button>
+        </div>
+        <div class="card">
+          <div class="multi-tabs">
+            <div class="multi-tab active">📸 Instagram</div>
+            <div class="multi-tab">▶️ YouTube</div>
+            <div class="multi-tab">💼 LinkedIn</div>
+            <div class="multi-tab">👥 Facebook</div>
+            <div class="multi-tab">✕ X</div>
+            <div class="multi-tab">💬 WhatsApp</div>
+          </div>
+          <div class="multi-content">
+            <h4>📸 Instagram — Caption + Hashtags</h4>
+            <p><strong>Hook:</strong> "Motivation is temporary. Systems are forever. 🧠"<br><br>Here are 5 practical ways to stay motivated during JEE prep:<br><br>1. Track small wins daily — progress fuels motivation<br>2. Study with a partner — accountability works<br>3. Take scheduled breaks — burnout kills dreams<br>4. Visualize your NIT/IIT seat — daily<br>5. Reward yourself for hitting weekly targets<br><br>Save this post 📌 and share with a friend who needs it today.<br><br>#JEEMotivation #StudyTips #JEE2027 #Patna #JEEMains</p>
+            <div style="display:flex;gap:6px;margin-top:12px;">
+              <button class="btn btn-primary btn-sm">Copy</button>
+              <button class="btn btn-ghost btn-sm">Save</button>
+              <button class="btn btn-ghost btn-sm">Schedule</button>
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          <strong>Backend changes needed:</strong> Extend <code class="mono">POST /api/generate</code> to accept <code class="mono">platforms: string[]</code> (array). Returns <code class="mono">{ results: { [platform]: GenerationResult } }</code>. Falls back to single-platform if <code class="mono">platform</code> (singular) is sent for backward compatibility.
+        </div>
+      </section>
+
+      <!-- ===== ROADMAP ===== -->
+      <section class="section" id="roadmap">
+        <div class="section-head">
+          <h2>Implementation roadmap</h2>
+          <p>4–6 weeks part-time. Build in this exact order — each phase unlocks the next.</p>
+        </div>
+        <div class="roadmap">
+          <h3>✅ Already done (v10 + Premium UI)</h3>
+          <div class="roadmap-list">
+            <span class="roadmap-item done">✓ v10 backend (Express + Supabase + Razorpay)</span>
+            <span class="roadmap-item done">✓ Premium Next.js UI (9 pages + animations)</span>
+            <span class="roadmap-item done">✓ AI provider chain (OpenAI → Gemini → mock)</span>
+            <span class="roadmap-item done">✓ Auth + rate limiting + Zod validation</span>
+          </div>
+        </div>
+        <div class="roadmap" style="margin-top:12px;">
+          <h3>🚀 Prompt 3 — Phase A (Weeks 1–2)</h3>
+          <div class="roadmap-list">
+            <span class="roadmap-item now">→ Module 1: AI Brand Brain</span>
+            <span class="roadmap-item next">Module 2: AI Content Score</span>
+            <span class="roadmap-item next">Module 3: AI Memory</span>
+            <span class="roadmap-item next">Module 4: Prompt Library</span>
+          </div>
+        </div>
+        <div class="roadmap" style="margin-top:12px;">
+          <h3>⏭ Prompt 3 — Phase B (Weeks 3–4)</h3>
+          <div class="roadmap-list">
+            <span class="roadmap-item next">Module 5: Image Understanding (Vision AI)</span>
+            <span class="roadmap-item next">Module 6: AI Repurposer</span>
+            <span class="roadmap-item next">Module 7: Multi-Platform Generation</span>
+          </div>
+        </div>
+        <div class="roadmap" style="margin-top:12px;">
+          <h3>🎯 After Prompt 3 — Launch</h3>
+          <div class="roadmap-list">
+            <span class="roadmap-item next">Deploy v10 backend to Render</span>
+            <span class="roadmap-item next">Deploy Next.js UI to Vercel</span>
+            <span class="roadmap-item next">Configure Razorpay live keys</span>
+            <span class="roadmap-item next">Set up Sentry + analytics</span>
+            <span class="roadmap-item next">Get first 10 real users</span>
+          </div>
+        </div>
+        <div class="roadmap" style="margin-top:12px;background:rgba(99,102,241,0.05);border-color:rgba(99,102,241,0.3);">
+          <h3>🚫 NOT in Prompt 3 (deferred to v2)</h3>
+          <div class="roadmap-list">
+            <span class="roadmap-item next">Video understanding</span>
+            <span class="roadmap-item next">Document-to-content</span>
+            <span class="roadmap-item next">Content Calendar</span>
+            <span class="roadmap-item next">Campaign Builder</span>
+            <span class="roadmap-item next">Competitor Analysis</span>
+            <span class="roadmap-item next">Team Workspace</span>
+            <span class="roadmap-item next">Brand Health Dashboard</span>
+            <span class="roadmap-item next">Prompt Marketplace</span>
+            <span class="roadmap-item next">Real-time collaboration</span>
+          </div>
+        </div>
+      </section>
+
+      <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--border);text-align:center;color:var(--text-muted);font-size:13px;">
+        🎨 Interactive preview of all 7 Prompt 3 feature modules · Built with the same design system as your premium Next.js UI
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Tab navigation
+    const items = document.querySelectorAll('.nav-item');
+    const sections = document.querySelectorAll('.section');
+    items.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = item.dataset.section;
+        items.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        sections.forEach(s => s.classList.remove('active'));
+        const el = document.getElementById(target);
+        if (el) {
+          el.classList.add('active');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    });
+
+    // Multi-platform tab switching
+    const multiTabs = document.querySelectorAll('.multi-tab');
+    const platforms = {
+      '📸 Instagram': { title: '📸 Instagram — Caption + Hashtags', body: '<strong>Hook:</strong> "Motivation is temporary. Systems are forever. 🧠"<br><br>Here are 5 practical ways to stay motivated during JEE prep:<br><br>1. Track small wins daily — progress fuels motivation<br>2. Study with a partner — accountability works<br>3. Take scheduled breaks — burnout kills dreams<br>4. Visualize your NIT/IIT seat — daily<br>5. Reward yourself for hitting weekly targets<br><br>Save this post 📌 and share with a friend who needs it today.<br><br>#JEEMotivation #StudyTips #JEE2027 #Patna #JEEMains' },
+      '▶️ YouTube': { title: '▶️ YouTube — Title + Description', body: '<strong>Title:</strong> 5 Ways to Stay MOTIVATED During JEE Prep (From a Topper) 🎓<br><br><strong>Description:</strong> Motivation fades. Systems stay. In this video, I share 5 practical motivation hacks that actually work for JEE aspirants.<br><br>👉 Subscribe for daily JEE tips<br>👉 Free study planner: [link]<br><br>Timestamps:<br>0:00 Why motivation fails<br>1:23 Hack #1: Track small wins<br>3:45 Hack #2: Study partner<br>...' },
+      '💼 LinkedIn': { title: '💼 LinkedIn — Authority Post', body: 'After mentoring 500+ JEE aspirants, I noticed one pattern:<br><br>The students who stay motivated aren\'t more disciplined. They have better SYSTEMS.<br><br>Here are 5 systems that work:<br><br>1. Daily win-tracking (progress = motivation)<br>2. Accountability partners<br>3. Scheduled rest (burnout is the enemy)<br>4. Visual goal-setting<br>5. Weekly reward loops<br><br>Which one will you try first?<br><br>#JEE #Education #StudentSuccess #Productivity' },
+      '👥 Facebook': { title: '👥 Facebook — Conversational Post', body: 'Parents of JEE aspirants — share this with your child 🎓<br><br>Motivation during JEE prep is HARD. Here are 5 things that actually work (from a mentor who\'s seen 500+ students go through this):<br><br>1. Celebrate small wins daily 🎉<br>2. Find a study buddy 👥<br>3. Take real breaks (no phone!) 📵<br>4. Picture the day you get your result 🎓<br>5. Reward yourself weekly 🎁<br><br>Save and share with a JEE parent who needs this 💙' },
+      '✕ X': { title: '✕ X — Thread', body: '🧵 5 ways to stay motivated during JEE prep (from mentoring 500+ students):<br><br>1/ Track small wins daily. Progress = motivation. Write down 1 thing you accomplished each night.<br><br>2/ Find a study partner. Accountability beats willpower every time.<br><br>3/ Take REAL breaks. Phone down, eyes up. Burnout kills more dreams than laziness.<br><br>4/ Visualize your NIT/IIT seat daily. Make it real in your head first.<br><br>5/ Reward yourself weekly. Small treats = sustainable motivation.<br><br>RT to help a JEE aspirant 🙏' },
+      '💬 WhatsApp': { title: '💬 WhatsApp — Quick Message', body: '🎓 *5 ways to stay motivated during JEE prep* 🎓<br><br>✅ Track small wins daily<br>✅ Study with a partner<br>✅ Take real breaks<br>✅ Visualize your goal<br>✅ Reward yourself weekly<br><br>💪 Forward to a JEE aspirant who needs this today!<br><br>👉 For more tips: [link]' },
+    };
+    multiTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        multiTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const content = document.querySelector('.multi-content');
+        const key = tab.textContent.trim();
+        const p = platforms[key];
+        if (p) {
+          content.innerHTML = `<h4>${p.title}</h4><p>${p.body}</p><div style="display:flex;gap:6px;margin-top:12px;"><button class="btn btn-primary btn-sm">Copy</button><button class="btn btn-ghost btn-sm">Save</button><button class="btn btn-ghost btn-sm">Schedule</button></div>`;
+        }
+      });
+    });
+
+    // Tone chips toggle
+    document.querySelectorAll('.tone-chips .chip').forEach(chip => {
+      chip.addEventListener('click', () => chip.classList.toggle('active'));
+    });
+  </script>
+</body>
+</html>
