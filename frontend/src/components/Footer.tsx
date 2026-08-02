@@ -4,14 +4,45 @@ import { Sparkles, Twitter, Github, Youtube, Linkedin, Mail } from 'lucide-react
 /**
  * Shared footer.
  *
- * - `variant="landing"` → full multi-column footer (brand + product + company + legal + social)
+ * - `variant="landing"` → full multi-column footer (brand + product + use cases +
+ *   resources + company + social)
  * - `variant="app"` → compact single-row footer for the authenticated app shell
  *
- * Why two variants? The landing page is wide and benefits from a rich footer
- * with sitemap-style links. The app shell already has a sidebar with all the
- * navigation, so a compact footer is enough — it just shows legal links and
- * a "back to landing" link.
+ * Every link points to a real, registered route. No fake navigation.
  */
+
+const PRODUCT_LINKS = [
+  { label: 'Features', to: '/features' },
+  { label: 'Pricing', to: '/pricing' },
+  { label: 'Roadmap', to: '/roadmap' },
+  { label: 'API (Coming Soon)', to: '/api' },
+  { label: 'Prompt Library', to: '/prompts' },
+];
+
+const USE_CASE_LINKS = [
+  { label: 'Creators', to: '/use-cases/creators' },
+  { label: 'Students', to: '/use-cases/students' },
+  { label: 'Coaching Institutes', to: '/use-cases/coaching-institutes' },
+  { label: 'Small Businesses', to: '/use-cases/small-businesses' },
+  { label: 'Agencies', to: '/use-cases/agencies' },
+  { label: 'Influencers', to: '/use-cases/influencers' },
+];
+
+const RESOURCE_LINKS = [
+  { label: 'Blog (Coming Soon)', to: '/blog' },
+  { label: 'Help Center', to: '/help' },
+  { label: 'Documentation', to: '/docs' },
+  { label: 'FAQ', to: '/faq' },
+];
+
+const COMPANY_LINKS = [
+  { label: 'About', to: '/about' },
+  { label: 'Contact', to: '/contact' },
+  { label: 'Privacy Policy', to: '/privacy' },
+  { label: 'Terms of Service', to: '/terms' },
+  { label: 'Changelog', to: '/changelog' },
+];
+
 export default function Footer({ variant = 'landing' }: { variant?: 'landing' | 'app' }) {
   if (variant === 'app') {
     return <AppFooter />;
@@ -23,43 +54,12 @@ export default function Footer({ variant = 'landing' }: { variant?: 'landing' | 
 // Landing footer — rich, multi-column
 // ============================================================================
 
-const PRODUCT_LINKS = [
-  { label: 'Features', to: '/#features' },
-  { label: 'Pricing', to: '/pricing' },
-  { label: 'Chrome Extension', to: '/terms' },
-  { label: 'API Keys', to: '/login' },
-  { label: 'Prompt Library', to: '/login' },
-];
-
-const COMPANY_LINKS = [
-  { label: 'About', to: '/terms' },
-  { label: 'Blog', to: '/terms' },
-  { label: 'Careers', to: '/terms' },
-  { label: 'Contact', to: '/terms' },
-  { label: 'Changelog', to: '/terms' },
-];
-
-const LEGAL_LINKS = [
-  { label: 'Privacy Policy', to: '/privacy' },
-  { label: 'Terms of Service', to: '/terms' },
-  { label: 'Security', to: '/privacy' },
-  { label: 'Cookie Policy', to: '/privacy' },
-];
-
-const USE_CASES = [
-  { label: 'For Creators', to: '/signup' },
-  { label: 'For Coaches', to: '/signup' },
-  { label: 'For Small Businesses', to: '/signup' },
-  { label: 'For Agencies', to: '/signup' },
-  { label: 'For Influencers', to: '/signup' },
-];
-
 function LandingFooter() {
   return (
     <footer className="relative z-10 border-t border-border bg-surface/50">
       {/* Main footer grid */}
       <div className="mx-auto max-w-6xl px-4 py-14">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-6">
           {/* Brand column (spans 2 on lg) */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold">
@@ -75,10 +75,10 @@ function LandingFooter() {
 
             {/* Social icons */}
             <div className="mt-6 flex items-center gap-2">
-              <SocialLink href="https://twitter.com" label="Twitter / X" icon={Twitter} />
               <SocialLink href="https://github.com" label="GitHub" icon={Github} />
-              <SocialLink href="https://youtube.com" label="YouTube" icon={Youtube} />
               <SocialLink href="https://linkedin.com" label="LinkedIn" icon={Linkedin} />
+              <SocialLink href="https://twitter.com" label="Twitter / X" icon={Twitter} />
+              <SocialLink href="https://youtube.com" label="YouTube" icon={Youtube} />
               <SocialLink href="mailto:support@aipostassistant.com" label="Email" icon={Mail} />
             </div>
 
@@ -93,28 +93,34 @@ function LandingFooter() {
           <FooterColumn title="Product" links={PRODUCT_LINKS} />
 
           {/* Use cases column */}
-          <FooterColumn title="Use Cases" links={USE_CASES} />
+          <FooterColumn title="Use Cases" links={USE_CASE_LINKS} />
+
+          {/* Resources column */}
+          <FooterColumn title="Resources" links={RESOURCE_LINKS} />
 
           {/* Company column */}
           <FooterColumn title="Company" links={COMPANY_LINKS} />
         </div>
 
         {/* Legal row */}
-        <div className="mt-10 grid gap-4 border-t border-border pt-6 sm:grid-cols-2">
-          <div className="flex flex-wrap items-center gap-4">
-            {LEGAL_LINKS.map((l) => (
-              <Link
-                key={l.label}
-                to={l.to}
-                className="text-xs text-text-tertiary transition-colors hover:text-text-primary"
-              >
-                {l.label}
+        <div className="mt-10 border-t border-border pt-6">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Link to="/privacy" className="text-xs text-text-tertiary transition-colors hover:text-text-primary">
+                Privacy Policy
               </Link>
-            ))}
-          </div>
-          <div className="flex items-center gap-2 sm:justify-end">
-            <span className="text-xs text-text-tertiary">Powered by</span>
-            <span className="text-xs font-medium text-text-secondary">OpenAI GPT-4o · Gemini · Razorpay · Supabase</span>
+              <span className="text-xs text-text-tertiary">·</span>
+              <Link to="/terms" className="text-xs text-text-tertiary transition-colors hover:text-text-primary">
+                Terms of Service
+              </Link>
+              <span className="text-xs text-text-tertiary">·</span>
+              <Link to="/changelog" className="text-xs text-text-tertiary transition-colors hover:text-text-primary">
+                Changelog
+              </Link>
+            </div>
+            <span className="text-xs text-text-tertiary">
+              Powered by OpenAI GPT-4o · Gemini · Razorpay · Supabase
+            </span>
           </div>
         </div>
       </div>
@@ -125,8 +131,9 @@ function LandingFooter() {
           <p className="text-xs text-text-tertiary">
             © {new Date().getFullYear()} AI Post Assistant. All rights reserved.
           </p>
+          <p className="text-xs text-text-tertiary">Version 16.0</p>
           <p className="text-xs text-text-tertiary">
-            Built with ❤️ for creators worldwide.
+            Made with <span className="text-error">❤️</span> for creators worldwide.
           </p>
         </div>
       </div>
@@ -209,3 +216,4 @@ function AppFooter() {
     </footer>
   );
 }
+
