@@ -24,6 +24,7 @@ import {
   Menu,
   X,
   Home,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
@@ -48,6 +49,7 @@ const nav: NavItem[] = [
   { label: 'Schedule', icon: CalendarClock, path: '/schedule', section: 'ACCOUNT' },
   { label: 'Analytics', icon: BarChart3, path: '/analytics', section: 'ACCOUNT' },
   { label: 'Profile', icon: User, path: '/profile', section: 'ACCOUNT' },
+  { label: 'Settings', icon: Settings, path: '/settings', section: 'ACCOUNT' },
   { label: 'Pricing', icon: CreditCard, path: '/pricing', section: 'ACCOUNT' },
 ];
 

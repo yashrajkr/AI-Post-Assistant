@@ -241,7 +241,7 @@ export default function Landing() {
               Generate captions, titles, hashtags, keywords, descriptions, CTAs, thumbnail ideas and posting tips for Instagram, YouTube, LinkedIn, Facebook, X and WhatsApp — in seconds.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
+<Link
                 to="/signup"
                 className="btn-brand inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold"
               >
@@ -252,6 +252,12 @@ export default function Landing() {
                 className="btn-secondary inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold"
               >
                 View pricing
+              </Link>
+              <Link
+                to="/features"
+                className="btn-ghost inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold"
+              >
+                Explore features
               </Link>
             </div>
             <div className="mt-8 flex flex-wrap gap-6 text-sm text-text-secondary">

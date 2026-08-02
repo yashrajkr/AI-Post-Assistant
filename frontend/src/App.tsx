@@ -7,6 +7,18 @@ import Signup from '@/pages/Signup';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import NotFound from '@/pages/NotFound';
+import Features from '@/pages/Features';
+import About from '@/pages/About';
+import Contact from '@/pages/Contact';
+import Roadmap from '@/pages/Roadmap';
+import Changelog from '@/pages/Changelog';
+import Docs from '@/pages/Docs';
+import Help from '@/pages/Help';
+import Faq from '@/pages/Faq';
+import ApiPage from '@/pages/ApiPage';
+import Blog from '@/pages/Blog';
+import UseCases from '@/pages/UseCases';
+import Pricing from '@/pages/Pricing';
 import Dashboard from '@/pages/Dashboard';
 import Generate from '@/pages/Generate';
 import BrandBrain from '@/pages/BrandBrain';
@@ -23,22 +35,32 @@ import History from '@/pages/History';
 import Schedule from '@/pages/Schedule';
 import Analytics from '@/pages/Analytics';
 import Profile from '@/pages/Profile';
-import Pricing from '@/pages/Pricing';
+import Settings from '@/pages/Settings';
 
 /**
  * Routing layout:
  *
- *   /                       Landing    (public)
- *   /login                  Login      (public)
- *   /signup                 Signup     (public)
- *   /privacy                Privacy    (public)
- *   /terms                  Terms      (public)
- *   /dashboard, /generate…  App pages  (protected by AuthGate → AppShell)
- *   *                       NotFound   (public)
- *
- * The Pricing page is intentionally placed under the protected shell so the
- * user's plan/credits state is available for the upgrade CTA. Public visitors
- * can still see pricing via the Landing page CTA → /signup flow.
+ *   /                          Landing          (public)
+ *   /features                  Features         (public)
+ *   /pricing                   Pricing          (public — no login required)
+ *   /about                     About            (public)
+ *   /contact                   Contact          (public)
+ *   /roadmap                   Roadmap          (public)
+ *   /changelog                 Changelog        (public)
+ *   /docs                      Docs             (public)
+ *   /help                      Help Center      (public)
+ *   /faq                       FAQ              (public)
+ *   /api                       API (Coming Soon)(public)
+ *   /blog                      Blog (Coming Soon)(public)
+ *   /use-cases                 Use Cases        (public)
+ *   /use-cases/:slug           Use Case detail  (public)
+ *   /privacy                   Privacy          (public)
+ *   /terms                     Terms            (public)
+ *   /login                     Login            (public)
+ *   /signup                    Signup           (public)
+ *   /dashboard, /generate...   App pages        (protected by AuthGate → AppShell)
+ *   /settings                  Settings         (protected)
+ *   *                          NotFound         (public)
  */
 export default function App() {
   return (
@@ -46,10 +68,23 @@ export default function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/features" element={<Features />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/roadmap" element={<Roadmap />} />
+        <Route path="/changelog" element={<Changelog />} />
+        <Route path="/docs" element={<Docs />} />
+        <Route path="/help" element={<Help />} />
+        <Route path="/faq" element={<Faq />} />
+        <Route path="/api" element={<ApiPage />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/use-cases" element={<UseCases />} />
+        <Route path="/use-cases/:slug" element={<UseCases />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
         {/* Protected routes — wrapped in AuthGate + AppShell */}
         <Route
@@ -75,7 +110,7 @@ export default function App() {
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
 
         {/* 404 — keep last */}
@@ -84,3 +119,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
