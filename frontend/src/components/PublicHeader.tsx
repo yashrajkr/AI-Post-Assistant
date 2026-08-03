@@ -169,7 +169,16 @@ export default function PublicHeader() {
   };
 
   return (
-    <header className="glass sticky top-0 z-50 border-b border-border">
+    <>
+      {/*
+        Every page that renders this header wraps it in a decorative
+        `overflow-hidden` container (to clip blurred background orbs). Any
+        ancestor with overflow != visible breaks `position: sticky`, so the
+        header would scroll away instead of staying pinned. `fixed` escapes
+        that ancestor entirely — the spacer below reserves the same height
+        so page content doesn't jump up underneath it.
+      */}
+      <header className="glass fixed inset-x-0 top-0 z-50 border-b border-border">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         {/* Logo */}
         <Link
@@ -364,7 +373,9 @@ export default function PublicHeader() {
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+      </header>
+      <div className="h-16" aria-hidden="true" />
+    </>
   );
 }
 
