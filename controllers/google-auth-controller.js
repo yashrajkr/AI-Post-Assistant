@@ -113,8 +113,16 @@ async function callback(req, res) {
   }
 
   const token = signSession(user.id, env.SESSION_SECRET);
+
+  // Set the cookie too (helps if frontend/backend are same-origin in dev)
   res.cookie('session', token, COOKIE_OPTIONS);
-  return res.redirect(`${env.FRONTEND_URL}/dashboard`);
+
+  // In production the frontend (Vercel) and backend (Render) are different
+  // domains, so the HttpOnly cookie can't be read/sent by the frontend.
+  // Pass the session token to the frontend via a query param — it stores it
+  // in localStorage and sends it as `Authorization: Bearer <token>`.
+  const tokenParam = encodeURIComponent(token);
+  return res.redirect(`${env.FRONTEND_URL}/auth/callback?token=${tokenParam}`);
 }
 
 module.exports = {

@@ -36,22 +36,39 @@ async function attachUser(req, res, next) {
       }
     }
 
-    // 2. If no session, try Bearer API key (extension / programmatic)
+    // 2. If no session, try Bearer token (session token OR API key)
     if (!req.user) {
       const authHeader = req.headers.authorization || req.headers.Authorization;
-      if (authHeader && authHeader.startsWith('Bearer apa_')) {
-        const rawKey = authHeader.slice(7); // strip "Bearer "
-        const keyHash = sha256(rawKey);
-        const apiKey = await findApiKeyByHash(keyHash);
-        if (apiKey) {
-          const user = await getUserById(apiKey.userId);
-          if (user) {
-            req.user = user;
-            req.userId = user.id;
-            req.apiKey = apiKey;
-            req.authMethod = 'api-key';
-            // Update last_used timestamp (fire-and-forget, don't block)
-            touchApiKey(apiKey.id).catch(() => {});
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const bearerToken = authHeader.slice(7).trim();
+
+        // 2a. Bearer session token (from Google OAuth redirect / localStorage).
+        //     This lets the frontend authenticate cross-origin when the cookie
+        //     can't be sent (Vercel frontend -> Render backend).
+        if (bearerToken && !bearerToken.startsWith('apa_')) {
+          const userId = verifySession(bearerToken, env.SESSION_SECRET);
+          if (userId) {
+            const user = await getUserById(userId);
+            if (user) {
+              req.user = user;
+              req.userId = user.id;
+              req.authMethod = 'session';
+            }
+          }
+        } else if (bearerToken.startsWith('apa_')) {
+          // 2b. Bearer API key (extension / programmatic)
+          const keyHash = sha256(bearerToken);
+          const apiKey = await findApiKeyByHash(keyHash);
+          if (apiKey) {
+            const user = await getUserById(apiKey.userId);
+            if (user) {
+              req.user = user;
+              req.userId = user.id;
+              req.apiKey = apiKey;
+              req.authMethod = 'api-key';
+              // Update last_used timestamp (fire-and-forget, don't block)
+              touchApiKey(apiKey.id).catch(() => {});
+            }
           }
         }
       }

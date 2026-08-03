@@ -1,66 +1,15 @@
-# AI Post Assistant — SaaS Polish & Navigation Overhaul
+# Fix Google OAuth Login
 
-## Phase 1 — Cleanup
-- [ ] Delete stray `c` temp file at repo root
-- [ ] Move `prompt3-preview.html` into `docs/`
-- [ ] Consolidate duplicate root `DEPLOYMENT.md` / `FINAL_REPORT.md` (keep in docs/)
+## Goal
+Fix "Continue with Google" login which is broken in production due to a cross-origin cookie problem (backend on Render, frontend on Vercel — different domains).
 
-## Phase 2 — Header redesign (PublicHeader.tsx)
-- [ ] Logged-out menu: Home, Features, Pricing, About, Contact, Login, Get Started
-- [ ] Logged-in menu: Dashboard, Generate, History, Analytics, Pricing + avatar dropdown (Profile, Settings, Logout)
-- [ ] Active page highlighting
-- [ ] Smooth scrolling
-- [ ] Responsive mobile navigation
-- [ ] Keyboard accessibility
-- [ ] Hover animations + dropdown animations
-
-## Phase 3 — Footer redesign (Footer.tsx)
-- [ ] Product column (Features, Pricing, Roadmap, API (Coming Soon), Prompt Library)
-- [ ] Use Cases column (Creators, Students, Coaching Institutes, Small Businesses, Agencies, Influencers)
-- [ ] Resources column (Blog (Coming Soon), Help Center, Documentation, FAQ)
-- [ ] Company column (About, Contact, Privacy Policy, Terms of Service, Changelog)
-- [ ] Social column (GitHub, LinkedIn, Twitter, YouTube)
-- [ ] Bottom bar: Copyright, Version, Made with ❤️, responsive
-
-## Phase 4 — Create pages
-- [ ] Features page
-- [ ] About page
-- [ ] Contact page
-- [ ] Roadmap page
-- [ ] Changelog page
-- [ ] Docs page
-- [ ] Help Center page
-- [ ] FAQ page
-- [ ] API page (Coming Soon)
-- [ ] Blog page (Coming Soon)
-- [ ] Use Cases pages (/use-cases/:slug)
-- [ ] Settings page
-
-## Phase 5 — Routing (App.tsx)
-- [ ] Move /pricing to public routes
-- [ ] Register all new public routes
-- [ ] Add /settings protected route
-
-## Phase 6 — Pricing fix (Pricing.tsx)
-- [ ] Public access (no login required)
-- [ ] Upgrade → logged-in opens payment (create-order + verify-payment)
-- [ ] Upgrade → logged-out redirects to /login with from=/pricing, returns after login
-
-## Phase 7 — Legal pages polish
-- [ ] Verify Privacy (Data Collection, Cookies, Auth, Google, Supabase, Razorpay, AI, Storage, Contact, Last Updated)
-- [ ] Verify Terms (Acceptable Use, Payments, Subscriptions, Refunds, AI Usage, Copyright, Termination, Liability, Contact)
-
-## Phase 8 — App shell & Profile
-- [ ] Add Settings to AppShell nav
-- [ ] Fix Profile "Manage" link to use Link component
-
-## Phase 9 — Production check
-- [ ] frontend build passes
-- [ ] frontend typecheck passes
-- [ ] frontend lint passes
-- [ ] backend tests pass
-- [ ] server boots
-
-## Phase 10 — FINAL_REPORT.md
-- [ ] Comprehensive final report
-
+## Steps
+- [ ] 1. Backend `middleware/auth.js` — extend `attachUser` to accept a session token via `Authorization: Bearer` (not just `apa_` API keys).
+- [ ] 2. Backend `controllers/google-auth-controller.js` — redirect to `FRONTEND_URL/auth/callback?token=<session>` after OAuth success.
+- [ ] 3. Backend `controllers/auth-controller.js` — return `token` in login/signup JSON responses.
+- [ ] 4. Frontend `lib/api.ts` — read token from localStorage and attach `Authorization: Bearer` header.
+- [ ] 5. Frontend `lib/auth.tsx` — persist returned token in localStorage; clear on logout.
+- [ ] 6. Frontend `pages/AuthCallback.tsx` — new page reads `?token=`, stores it, navigates to `/dashboard`.
+- [ ] 7. Frontend `App.tsx` — add `/auth/callback` route.
+- [ ] 8. Frontend `pages/Login.tsx` & `pages/Signup.tsx` — surface `?error=` query param via toast.
+- [ ] 9. Run typecheck + verify build.

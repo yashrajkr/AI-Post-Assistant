@@ -41,10 +41,10 @@ function signup(req, res) {
     if (existing) {
       return res.status(409).json({ success: false, message: 'Email already exists.' });
     }
-    await createUser(user);
+await createUser(user);
     const token = signSession(user.id, env.SESSION_SECRET);
     res.cookie('session', token, COOKIE_OPTIONS);
-    return res.status(201).json({ success: true, user: publicUser(user) });
+    return res.status(201).json({ success: true, token, user: publicUser(user) });
   })(req, res);
 }
 
