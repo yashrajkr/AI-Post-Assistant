@@ -1,5 +1,9 @@
 # Deployment Guide — AI Post Assistant v12
 
+> ⚠️ **Superseded.** See `/DEPLOYMENT.md` and `/AUTH_CHECKLIST.md` (repo
+> root) for the current Supabase Auth deploy steps. Kept here for
+> historical reference.
+
 Complete step-by-step guide to deploy your backend (Render) + frontend (Vercel) + connect Chrome extension.
 
 ---

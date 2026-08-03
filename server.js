@@ -1,13 +1,18 @@
 /**
  * server.js
- * Bootstrap. Wires Express + middleware + routes + static + error handler.
+ * Bootstrap. Wires Express + middleware + routes + error handler.
+ *
+ * This is a pure JSON API — the frontend (frontend/) is a separate Vite
+ * app deployed to Vercel, not served from here (an earlier vanilla-HTML
+ * frontend under public/ used to be served as a static SPA fallback; it
+ * was removed since it duplicated frontend/ and called auth endpoints
+ * that no longer exist post-Supabase-Auth-migration — see AUTH_AUDIT.md).
  *
  * KEEP THIS FILE UNDER ~100 LINES. All business logic lives in /controllers,
  * /services, /routes, /middleware.
  */
 
 const express = require('express');
-const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const cors = require('cors');
 
@@ -75,12 +80,11 @@ app.post(
 // --- Body parsers (after webhook so the webhook still gets raw body) ---
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(cookieParser());
 
 // --- Global rate limiter (after body parsers, before routes) ---
 app.use('/api', globalLimiter);
 
-// --- Attach user (if session cookie present) ---
+// --- Attach user (if a Bearer token — Supabase session or API key — is present) ---
 app.use(attachUser);
 
 // --- API routes ---
@@ -98,7 +102,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// --- 404 + error handler (last) ---
+// --- 404 + error handler (last) — pure API, so this applies to every route ---
 app.use(notFound);
 app.use(errorHandler);
 

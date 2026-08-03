@@ -5,13 +5,11 @@
  */
 
 const express = require('express');
-const { authLimiter, aiLimiter } = require('../middleware/rate-limits');
+const { aiLimiter } = require('../middleware/rate-limits');
 const { validate } = require('../middleware/validate');
 const { requireAuth } = require('../middleware/auth');
 
 const {
-  signupSchema,
-  loginSchema,
   profileSchema,
   upgradeSchema,
   generateSchema,
@@ -31,7 +29,6 @@ const {
 } = require('../utils/validators');
 
 const auth = require('./auth');
-const googleAuth = require('../controllers/google-auth-controller');
 const generate = require('./generate');
 const schedule = require('./schedule');
 const analytics = require('./analytics');
@@ -60,15 +57,11 @@ module.exports = function buildRoutes(app) {
   app.get('/api/health', health.getHealth);
   app.get('/api/ai/health', health.getAiHealth);
 
-  // Auth (rate-limited)
-  app.post('/api/signup', authLimiter, validate(signupSchema), auth.signup);
-  app.post('/api/login', authLimiter, validate(loginSchema), auth.login);
-  app.post('/api/logout', auth.logout);
-  app.get('/api/me', auth.me);
-
-  // Google OAuth ("Continue with Google") — disabled gracefully if not configured.
-  app.get('/api/auth/google', authLimiter, googleAuth.loginUrl);
-  app.get('/api/auth/google/callback', authLimiter, googleAuth.callback);
+  // Auth — identity (signup/login/logout/Google/password reset/email
+  // verification) is handled entirely by Supabase Auth on the frontend via
+  // supabase-js. This backend only verifies the resulting access token
+  // (see middleware/auth.js) and exposes the app-level profile below.
+  app.get('/api/me', requireAuth, auth.me);
 
   // Templates (public)
   app.get('/api/templates', (req, res) => {

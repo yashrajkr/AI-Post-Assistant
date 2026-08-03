@@ -8,21 +8,26 @@
 create extension if not exists "pgcrypto";
 
 -- ------------------------------------------------------------
--- MIGRATION for an already-created project (users table exists
--- with `password_hash text not null`): run this once to allow
--- Google-only accounts without dropping/recreating the table.
---   alter table users alter column password_hash drop not null;
+-- MIGRATION for an already-created project: if this project predates the
+-- Supabase Auth migration (`password_hash text not null`, no `avatar_url`/
+-- `provider` columns, `id` not linked to auth.users), run
+-- migrations/002_supabase_auth_migration.sql once instead of this file.
 -- ------------------------------------------------------------
 
 -- ---------- USERS ----------
--- password_hash is nullable: Google-only accounts (see
--- controllers/google-auth-controller.js) are created with passwordHash: null
--- and can never log in via the password form.
+-- `id` is the Supabase Auth user id (auth.users.id) — identity itself
+-- (email, password, Google OAuth) lives in Supabase Auth, not here.
+-- This table only holds app-level data: plan, credits, brand voice, etc.
+-- See migrations/002_supabase_auth_migration.sql for the auto-create
+-- trigger and RLS policies (run automatically the first time via the
+-- backend too, so the trigger is belt-and-suspenders).
 create table if not exists users (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key references auth.users(id) on delete cascade,
   email text unique not null,
   name text default 'Creator',
-  password_hash text,
+  password_hash text,  -- unused (Supabase Auth owns passwords); kept for legacy data migrated from v10 and earlier
+  avatar_url text,
+  provider text default 'email',
   plan text default 'free',
   credits integer default 10,
   brand_voice jsonb default '{}'::jsonb,

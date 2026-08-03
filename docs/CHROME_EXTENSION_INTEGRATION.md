@@ -36,19 +36,18 @@ npm start
 # → http://localhost:3000
 ```
 
-### Step 2 — Signup via curl
-```bash
-curl -X POST http://localhost:3000/api/signup \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test","email":"test@example.com","password":"password123"}' \
-  -c cookies.txt
-```
+### Step 2 — Sign up and log in via the web app
+Auth is Supabase Auth now (see `AUTH_SETUP.md`), not a backend
+`/api/signup` route — sign up at `http://localhost:3001/signup` in the
+browser, then copy your session's access token from devtools
+(Application -> Local Storage -> `sb-<project-ref>-auth-token` -> `access_token`)
+for the curl call below.
 
 ### Step 3 — Generate an API key
 ```bash
 curl -X POST http://localhost:3000/api/api-keys \
   -H "Content-Type: application/json" \
-  -H "Cookie: $(grep session cookies.txt | awk '{print "session="$7}')" \
+  -H "Authorization: Bearer <paste supabase access_token here>" \
   -d '{"name":"Chrome Extension"}'
 ```
 Response (raw key shown ONCE):

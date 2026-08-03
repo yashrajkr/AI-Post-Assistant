@@ -1,5 +1,9 @@
 # Pre-Launch Deployment Checklist
 
+> ⚠️ **Superseded by `/DEPLOYMENT_CHECKLIST.md` (repo root) and
+> `/AUTH_CHECKLIST.md`**, which reflect the current Supabase Auth setup.
+> Kept here for historical reference.
+
 Run through this list before going live. Every box must be checked.
 
 ## 1. Environment (Render Dashboard → Environment)

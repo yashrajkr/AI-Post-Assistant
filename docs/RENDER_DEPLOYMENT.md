@@ -1,5 +1,9 @@
 # Render Deployment (Backend)
 
+> ⚠️ Env var list below may reference the removed `SESSION_SECRET`/
+> `GOOGLE_CLIENT_ID` vars — see `render.yaml` and `/AUTH_CHECKLIST.md` for
+> the current, accurate list.
+
 The root of this repo (`server.js` and friends) is a standalone Express API.
 It's meant to run on Render (or any Node host / Docker platform) completely
 independently of the Next.js frontend.

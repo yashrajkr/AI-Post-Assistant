@@ -1,20 +1,28 @@
 /**
  * middleware/auth.js
- * Auth middleware — supports BOTH session cookie AND Bearer API key.
+ * Auth middleware — supports BOTH Supabase Auth (browser/frontend) AND
+ * Bearer API keys (Chrome extension + programmatic access).
  *
- * Auth precedence:
- *   1. Session cookie (browser users — existing behavior)
- *   2. Authorization: Bearer apa_xxx (Chrome extension + programmatic access)
+ * Auth precedence, based on the `Authorization: Bearer <token>` header:
+ *   1. `apa_...`  -> API key (Chrome extension / programmatic access)
+ *   2. anything else -> Supabase Auth access token (issued by supabase-js
+ *      on the frontend after login/signup/OAuth). Verified against Supabase
+ *      itself, so it works identically on localhost, Vercel, and Render —
+ *      there is no server-side session state to keep in sync.
+ *
+ * On first sighting of a Supabase user, we lazily create their row in our
+ * own `users` table (plan/credits/brandVoice/etc. live there — Supabase Auth
+ * only owns identity, not app data).
  *
  * - requireAuth: 401 if not authenticated
  * - requirePlan('pro'): 403 if user's plan is too low
  * - requireCredits(n): 402 if user doesn't have enough credits
  */
 
-const { verifySession } = require('../utils/helpers');
-const { env } = require('../config/env');
+const { getSupabaseUserFromToken } = require('../config/supabase');
 const {
   getUserById,
+  getOrCreateProfile,
   findApiKeyByHash,
   touchApiKey,
   sha256,
@@ -22,26 +30,13 @@ const {
 
 async function attachUser(req, res, next) {
   try {
-    // 1. Try session cookie first (browser)
-    const token = req.cookies?.session;
-    if (token) {
-      const userId = verifySession(token, env.SESSION_SECRET);
-      if (userId) {
-        const user = await getUserById(userId);
-        if (user) {
-          req.user = user;
-          req.userId = user.id;
-          req.authMethod = 'session';
-        }
-      }
-    }
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const bearerToken = authHeader.slice(7).trim();
 
-    // 2. If no session, try Bearer API key (extension / programmatic)
-    if (!req.user) {
-      const authHeader = req.headers.authorization || req.headers.Authorization;
-      if (authHeader && authHeader.startsWith('Bearer apa_')) {
-        const rawKey = authHeader.slice(7); // strip "Bearer "
-        const keyHash = sha256(rawKey);
+      if (bearerToken.startsWith('apa_')) {
+        // API key (extension / programmatic)
+        const keyHash = sha256(bearerToken);
         const apiKey = await findApiKeyByHash(keyHash);
         if (apiKey) {
           const user = await getUserById(apiKey.userId);
@@ -53,6 +48,15 @@ async function attachUser(req, res, next) {
             // Update last_used timestamp (fire-and-forget, don't block)
             touchApiKey(apiKey.id).catch(() => {});
           }
+        }
+      } else if (bearerToken) {
+        // Supabase Auth access token
+        const supabaseUser = await getSupabaseUserFromToken(bearerToken);
+        if (supabaseUser) {
+          const user = await getOrCreateProfile(supabaseUser);
+          req.user = user;
+          req.userId = user.id;
+          req.authMethod = 'supabase';
         }
       }
     }

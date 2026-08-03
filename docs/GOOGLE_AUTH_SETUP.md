@@ -1,5 +1,10 @@
 # Google OAuth Setup ("Continue with Google")
 
+> ⚠️ **Superseded.** `controllers/google-auth-controller.js` has been
+> deleted — Google login now goes through Supabase Auth directly. See
+> `/GOOGLE_SETUP.md` (repo root) for the current setup. Kept here for
+> historical reference only.
+
 The backend now has a real Google OAuth 2.0 Authorization Code flow
 (`controllers/google-auth-controller.js`), but it is **disabled by default**
 until you provide credentials. Without them, the app works exactly as before

@@ -1,5 +1,8 @@
 # PostReady AI v10 — Final Report
 
+> ⚠️ Historical snapshot (v10). See `/AUTH_AUDIT.md` and `/TEST_REPORT.md`
+> (repo root) for the current state after the Supabase Auth migration.
+
 ## 1. New project structure
 
 ```

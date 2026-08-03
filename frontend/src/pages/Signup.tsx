@@ -19,7 +19,7 @@ function passwordStrength(pwd: string): { score: 0 | 1 | 2 | 3; label: string; c
 }
 
 export default function Signup() {
-  const { signup } = useAuth();
+  const { signup, loginWithGoogle } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -28,6 +28,7 @@ export default function Signup() {
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const strength = useMemo(() => passwordStrength(password), [password]);
 
@@ -37,6 +38,15 @@ export default function Signup() {
     setSubmitting(true);
     try {
       const user = await signup(name.trim(), email.trim(), password);
+      if (!user) {
+        // Email confirmation is required before a session exists.
+        toast({
+          title: 'Check your email',
+          description: `We sent a verification link to ${email.trim()}. Confirm it to finish signing up.`,
+          tone: 'success',
+        });
+        return;
+      }
       toast({
         title: 'Account created!',
         description: user.credits ? `${user.credits} free credits added.` : 'Welcome aboard.',
@@ -44,10 +54,24 @@ export default function Signup() {
       });
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : 'Please try again.';
+      const msg = err instanceof Error ? err.message : err instanceof ApiError ? err.message : 'Please try again.';
       toast({ title: 'Signup failed', description: msg, tone: 'error' });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const onGoogle = async () => {
+    setGoogleLoading(true);
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      toast({
+        title: 'Google sign-in failed',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        tone: 'error',
+      });
+      setGoogleLoading(false);
     }
   };
 
@@ -67,13 +91,15 @@ export default function Signup() {
           <p className="mt-1 text-sm text-text-secondary">Start generating in 30 seconds</p>
         </div>
 
-        <a
-          href={`${import.meta.env.VITE_API_URL || ''}/api/auth/google`}
-          className="btn-secondary flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold"
+        <button
+          type="button"
+          onClick={onGoogle}
+          disabled={googleLoading}
+          className="btn-secondary flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
         >
           <GoogleIcon />
-          Sign up with Google
-        </a>
+          {googleLoading ? 'Redirecting…' : 'Sign up with Google'}
+        </button>
 
         <div className="my-5 flex items-center gap-3 text-xs text-text-tertiary">
           <span className="h-px flex-1 bg-border" />

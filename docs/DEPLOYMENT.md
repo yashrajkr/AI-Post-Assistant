@@ -1,5 +1,9 @@
 # Deployment Guide
 
+> ⚠️ **Superseded.** See `/DEPLOYMENT.md` (repo root) for the current
+> Vercel + Render + Supabase deploy steps, and `/AUTH_CHECKLIST.md` for the
+> exact dashboard configuration. Kept here for historical reference only.
+
 ## Local run
 
 ```bash

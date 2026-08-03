@@ -13,6 +13,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { getClients } = require('../config/supabase');
 const { normalizeUser } = require('./user-normalizer');
+const { PLAN_CREDITS } = require('../config/plans');
 const logger = require('../utils/logger');
 
 const ROOT = path.join(__dirname, '..');
@@ -128,6 +129,67 @@ async function getUserById(userId) {
   ensureDataFiles();
   const users = readJson(USERS_FILE, []);
   return users.find((u) => u.id === userId) || null;
+}
+
+/**
+ * Given a verified Supabase Auth user (from `supabase.auth.getUser()`),
+ * return our app-level profile row for them, creating it on first sight.
+ *
+ * Supabase Auth owns identity (email, password, OAuth). We own app data
+ * (plan, credits, brandVoice, generations). The row's `id` is always the
+ * Supabase Auth user id, so the two stay linked 1:1 forever.
+ */
+async function getOrCreateProfile(supabaseUser) {
+  const existing = await getUserById(supabaseUser.id);
+  if (existing) return existing;
+
+  const meta = supabaseUser.user_metadata || {};
+  const provider = supabaseUser.app_metadata?.provider || 'email';
+  const name = meta.full_name || meta.name || supabaseUser.email.split('@')[0];
+  const avatarUrl = meta.avatar_url || meta.picture || null;
+
+  if (usingSupabase()) {
+    const { supabaseService } = getClients();
+    const { data, error } = await supabaseService
+      .from('users')
+      .upsert(
+        {
+          id: supabaseUser.id,
+          name,
+          email: supabaseUser.email.toLowerCase(),
+          avatar_url: avatarUrl,
+          provider,
+          plan: 'free',
+          credits: PLAN_CREDITS.free,
+          brand_voice: { brandName: '', tagline: '', tone: 'simple and practical' },
+          generations: [],
+          created_at: supabaseUser.created_at || new Date().toISOString(),
+        },
+        { onConflict: 'id', ignoreDuplicates: true }
+      )
+      .select('*')
+      .single();
+    if (error) throw error;
+    return normalizeUser(data);
+  }
+
+  ensureDataFiles();
+  const users = readJson(USERS_FILE, []);
+  const user = {
+    id: supabaseUser.id,
+    name,
+    email: supabaseUser.email.toLowerCase(),
+    avatarUrl,
+    provider,
+    plan: 'free',
+    credits: PLAN_CREDITS.free,
+    brandVoice: { brandName: '', tagline: '', tone: 'simple and practical' },
+    generations: [],
+    createdAt: supabaseUser.created_at || new Date().toISOString(),
+  };
+  users.push(user);
+  writeJson(USERS_FILE, users);
+  return user;
 }
 
 async function saveProfile({ userId, name, brandVoice, plan, credits }) {
@@ -1105,6 +1167,7 @@ module.exports = {
   createUser,
   getUserByEmail,
   getUserById,
+  getOrCreateProfile,
   saveProfile,
   saveCreditsAndPlan,
   decrementCredits,

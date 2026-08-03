@@ -14,6 +14,8 @@ function publicUser(user) {
     id: user.id,
     name: user.name,
     email: user.email,
+    avatarUrl: user.avatarUrl || user.avatar_url || null,
+    provider: user.provider || 'email',
     plan: user.plan || 'free',
     credits: Number(user.credits || 0),
     brandVoice: user.brandVoice || {},
@@ -43,32 +45,6 @@ function verifyPassword(password, saved) {
   }
 }
 
-/**
- * HMAC-signed session token: `${userId}.${timestamp}.${random}.${signature}`.
- */
-function signSession(userId, secret) {
-  const payload = `${userId}.${Date.now()}.${crypto.randomBytes(8).toString('hex')}`;
-  const sig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-  return `${payload}.${sig}`;
-}
-
-function verifySession(token, secret) {
-  if (!token || typeof token !== 'string') return null;
-  const parts = token.split('.');
-  if (parts.length !== 4) return null;
-  const payload = parts.slice(0, 3).join('.');
-  const sig = parts[3];
-  const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-  try {
-    const a = Buffer.from(sig);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-  } catch {
-    return null;
-  }
-  return parts[0]; // userId
-}
-
 function mostCommon(list) {
   const counts = {};
   for (const item of list.filter(Boolean)) counts[item] = (counts[item] || 0) + 1;
@@ -94,8 +70,6 @@ module.exports = {
   publicUser,
   passwordHash,
   verifyPassword,
-  signSession,
-  verifySession,
   mostCommon,
   cleanTag,
   templatePrefix,

@@ -7,13 +7,12 @@
  * /api rewrite proxy (removed — it was a stale, unused placeholder); it only
  * handles the SPA fallback route.
  *
- * All requests include credentials (session cookie) so the server-side
- * attachUser/requireAuth middleware can identify the user. Because the
- * frontend (*.vercel.app) and backend (*.onrender.com) are different sites,
- * this is a genuine cross-site request — the backend sets its session cookie
- * with SameSite=None; Secure in production (see COOKIE_OPTIONS in
- * controllers/auth-controller.js) so the browser will send it here.
+ * Auth is stateless: every request carries the current Supabase Auth
+ * access token as `Authorization: Bearer <token>`. This works identically
+ * whether frontend and backend share an origin (localhost) or not
+ * (Vercel frontend -> Render backend) — no cookies involved.
  */
+import { supabase } from './supabaseClient';
 
 export const API_URL =
   (import.meta.env.VITE_API_URL as string | undefined) ||
@@ -57,10 +56,14 @@ export async function api<T = unknown>(
   const isFormData =
     typeof FormData !== 'undefined' && options?.body instanceof FormData;
 
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   const res = await fetch(`${API_URL}${path}`, {
-    credentials: 'include',
     headers: {
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
       ...options?.headers,
     },
     ...options,
@@ -118,6 +121,8 @@ export interface User {
   name?: string;
   firstName?: string;
   lastName?: string;
+  avatarUrl?: string | null;
+  provider?: string;
   plan: 'free' | 'creator' | 'pro' | 'team' | string;
   credits: number;
   creditsTotal?: number;
