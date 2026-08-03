@@ -7,7 +7,6 @@
  */
 
 const express = require('express');
-const path = require('path');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -29,7 +28,6 @@ ensureDataFiles();
 
 const app = express();
 const PORT = env.PORT;
-const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // --- CORS origin resolver ---
 // Allows: (a) configured ALLOWED_ORIGINS, (b) chrome-extension://* (any extension id)
@@ -82,19 +80,20 @@ app.use(attachUser);
 // --- API routes ---
 buildRoutes(app);
 
-// --- Static files (frontend) ---
-app.use(express.static(PUBLIC_DIR));
-
-// --- SPA fallback: unknown non-/api routes return index.html ---
-app.get(/^\/(?!api).*/, (req, res, next) => {
-  if (req.path.startsWith('/api')) return next();
-  res.sendFile(path.join(PUBLIC_DIR, 'index.html'), (err) => {
-    if (err) next(err);
+// --- Root: simple API info response (this service is API-only; ---
+// --- the actual product frontend is deployed separately on Vercel) ---
+app.get('/', (req, res) => {
+  res.json({
+    name: env.APP_NAME,
+    status: 'ok',
+    message: 'This is the AI Post Assistant API. The web app is served separately.',
+    frontend: env.FRONTEND_URL || undefined,
+    health: '/api/health',
   });
 });
 
 // --- 404 + error handler (last) ---
-app.use('/api', notFound);
+app.use(notFound);
 app.use(errorHandler);
 
 // --- Boot ---
