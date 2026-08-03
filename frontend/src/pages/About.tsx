@@ -45,7 +45,7 @@ export default function About() {
       <PublicHeader />
 
       {/* Hero */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 pt-16 pb-20 md:pt-24">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pt-16 pb-20 md:pt-24">
         <motion.div {...fadeUp} transition={{ duration: 0.5 }} className="text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand">
             <Sparkles className="h-3 w-3" /> About us
@@ -61,7 +61,7 @@ export default function About() {
       </section>
 
       {/* Mission & Vision */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 pb-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-20">
         <div className="grid gap-5 md:grid-cols-2">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="card p-8">
             <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl bg-brand/10 text-brand">
@@ -89,7 +89,7 @@ export default function About() {
       </section>
 
       {/* Why */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 pb-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-20">
         <div className="mb-10 text-center">
           <span className="text-xs font-semibold uppercase tracking-wider text-brand">Why us</span>
           <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl">
@@ -147,7 +147,7 @@ export default function About() {
       </section>
 
       {/* Roadmap */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 pb-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-20">
         <div className="mb-10 text-center">
           <span className="text-xs font-semibold uppercase tracking-wider text-brand">Future roadmap</span>
           <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl">What's next</h2>

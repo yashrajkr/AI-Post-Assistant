@@ -114,7 +114,7 @@ export default function BrandBrain() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <PageHeader
         badge="Module 1 · Brand Brain"
         title="Teach the AI your voice"

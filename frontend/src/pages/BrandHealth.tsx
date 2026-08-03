@@ -10,7 +10,7 @@ export default function BrandHealth() {
   const totalLabel = total >= 80 ? 'Excellent' : total >= 60 ? 'Growing' : 'Needs work';
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-6">
       <PageHeader badge="v2 · Brand Health Dashboard" title="Brand health" subtitle="How consistent and effective is your brand voice across content.">
         <button className="btn-secondary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold">
           <RefreshCw className="h-4 w-4" />

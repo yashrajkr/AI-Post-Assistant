@@ -103,7 +103,7 @@ export default function ApiKeys() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <PageHeader badge="Chrome Extension · API Keys" title="API keys" subtitle="Generate keys to connect the Chrome extension and other integrations.">
         <button onClick={() => setShowCreate(true)} className="btn-brand inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold">
           <Plus className="h-4 w-4" />

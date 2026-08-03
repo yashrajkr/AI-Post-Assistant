@@ -58,7 +58,7 @@ function LandingFooter() {
   return (
     <footer className="relative z-10 border-t border-border bg-surface/50">
       {/* Main footer grid */}
-      <div className="mx-auto max-w-6xl px-4 py-14">
+      <div className="mx-auto max-w-7xl px-4 py-14">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-6">
           {/* Brand column (spans 2 on lg) */}
           <div className="lg:col-span-2">
@@ -127,7 +127,7 @@ function LandingFooter() {
 
       {/* Bottom bar */}
       <div className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-5 sm:flex-row">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 sm:flex-row">
           <p className="text-xs text-text-tertiary">
             © {new Date().getFullYear()} AI Post Assistant. All rights reserved.
           </p>
