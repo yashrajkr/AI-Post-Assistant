@@ -14,9 +14,13 @@ const {
   saveProfile,
 } = require('../services/storage-service');
 
+// Frontend (*.vercel.app) and backend (*.onrender.com) are different sites,
+// so the session cookie needs SameSite=None (+ Secure) in production for the
+// browser to send it on cross-site fetch() calls with credentials: 'include'.
+// 'lax' is kept for local dev (http://localhost, no HTTPS).
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  sameSite: 'lax',
+  sameSite: env.isProduction ? 'none' : 'lax',
   secure: env.isProduction,
   path: '/',
 };
@@ -51,7 +55,16 @@ function signup(req, res) {
 function login(req, res) {
   return asyncHandler(async () => {
     const user = await getUserByEmail(req.body.email.toLowerCase());
-    if (!user || !verifyPassword(req.body.password, user.passwordHash)) {
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+    if (!user.passwordHash) {
+      return res.status(401).json({
+        success: false,
+        message: 'This account was created with Google. Please use "Continue with Google" to sign in.',
+      });
+    }
+    if (!verifyPassword(req.body.password, user.passwordHash)) {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
     const token = signSession(user.id, env.SESSION_SECRET);
@@ -61,7 +74,7 @@ function login(req, res) {
 }
 
 function logout(req, res) {
-  res.clearCookie('session', { path: '/' });
+  res.clearCookie('session', { path: '/', sameSite: COOKIE_OPTIONS.sameSite, secure: COOKIE_OPTIONS.secure });
   return res.status(200).json({ success: true });
 }
 

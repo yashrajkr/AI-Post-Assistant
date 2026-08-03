@@ -2,10 +2,17 @@
  * Typed fetch wrapper for the AI Post Assistant Express backend.
  *
  * The backend runs on http://localhost:3000 in dev (see ../server.js).
- * In production, set VITE_API_URL to the public backend URL.
+ * In production, set VITE_API_URL to the public Render backend URL — this is
+ * the only mechanism used to reach the backend. frontend/vercel.json has no
+ * /api rewrite proxy (removed — it was a stale, unused placeholder); it only
+ * handles the SPA fallback route.
  *
  * All requests include credentials (session cookie) so the server-side
- * attachUser/requireAuth middleware can identify the user.
+ * attachUser/requireAuth middleware can identify the user. Because the
+ * frontend (*.vercel.app) and backend (*.onrender.com) are different sites,
+ * this is a genuine cross-site request — the backend sets its session cookie
+ * with SameSite=None; Secure in production (see COOKIE_OPTIONS in
+ * controllers/auth-controller.js) so the browser will send it here.
  */
 
 export const API_URL =
