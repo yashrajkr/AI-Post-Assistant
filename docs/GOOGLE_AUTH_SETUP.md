@@ -1,70 +1,83 @@
-# Google OAuth Setup ("Continue with Google")
+# Google Sign-In Setup ("Continue with Google")
 
-The backend now has a real Google OAuth 2.0 Authorization Code flow
-(`controllers/google-auth-controller.js`), but it is **disabled by default**
-until you provide credentials. Without them, the app works exactly as before
-(email/password) — the Google buttons just redirect back to `/login` with a
-friendly message.
+"Continue with Google" is handled by **Supabase Auth**, not a custom OAuth
+flow in this codebase. Supabase runs the entire Google consent screen +
+token exchange; this app just validates the resulting Supabase session and
+maps it to a local user.
 
-## 1. Create a Google Cloud OAuth client
+If Supabase isn't configured, the Google button hides itself automatically
+— email/password still works.
 
-1. Go to <https://console.cloud.google.com/apis/credentials>.
-2. Create a project (or select an existing one).
-3. Click **Create Credentials → OAuth client ID**.
-4. Application type: **Web application**.
-5. Under **Authorized redirect URIs**, add:
-   - Local dev: `http://localhost:3000/api/auth/google/callback`
-   - Production: `https://your-backend-domain.com/api/auth/google/callback`
-6. Save. Copy the **Client ID** and **Client secret**.
+## 1. Enable the Google provider in Supabase
 
-If you see this project has no OAuth consent screen configured yet, you'll be
-asked to set one up first — for a small SaaS, "External" + your own email as
-a test user is enough to start.
+1. Go to your project's [Supabase dashboard](https://supabase.com/dashboard) → **Authentication → Providers → Google**.
+2. Toggle it on.
+3. You'll need a Google OAuth client (Client ID + Secret) from
+   <https://console.cloud.google.com/apis/credentials>:
+   - Application type: **Web application**.
+   - Authorized redirect URI: use the callback URL Supabase shows on that
+     provider page — it looks like
+     `https://<your-project-ref>.supabase.co/auth/v1/callback`.
+4. Paste the Google Client ID + Secret into the Supabase provider settings
+   and save.
 
-## 2. Set backend environment variables
+## 2. Add your app's redirect URL to Supabase
 
-In `.env` (local) or your Render environment variables (production):
+Under **Authentication → URL Configuration**, add every origin the app is
+served from to **Redirect URLs**, e.g.:
+
+- `http://localhost:5173/auth/callback` (local dev)
+- `https://your-app.vercel.app/auth/callback` (production)
+
+Supabase only redirects back to URLs on this allow-list.
+
+## 3. Environment variables
+
+**Backend** (`.env` / Render) — reuses the same Supabase keys the app
+already uses for storage:
 
 ```env
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback   # or your prod URL
-FRONTEND_URL=http://localhost:3001                                   # or your Vercel URL
+SUPABASE_URL=https://<your-project-ref>.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
-Restart the server. The startup log should stop warning about missing Google
-OAuth vars.
+**Frontend** (`frontend/.env.local` / Vercel) — the anon key is safe to
+expose in the browser, that's what it's for:
 
-## 3. How the flow works
+```env
+VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
 
-1. Browser hits `GET /api/auth/google` on the backend.
-2. Backend redirects to Google's consent screen, with a random `state` value
-   stored in a short-lived, httpOnly cookie (CSRF protection).
-3. Google redirects back to `GET /api/auth/google/callback?code=...&state=...`.
-4. Backend verifies `state`, exchanges `code` for tokens, and verifies the
-   `id_token` signature via `google-auth-library` (not just decoded — actually
-   cryptographically verified against Google's public keys).
-5. If a user with that email already exists, they're logged into that
-   account (so someone who signed up with email/password can also use
-   Google later). Otherwise a new account is created with `passwordHash: null`
-   (Google-only — they can't log in with a password unless they use "forgot
-   password" once that's implemented).
-6. A normal session cookie is set and the browser is redirected to
-   `${FRONTEND_URL}/dashboard`.
+## 4. How the flow works
 
-## 4. Common issues
+1. Browser clicks "Continue with Google" → `supabase.auth.signInWithOAuth({ provider: 'google' })`
+   (`frontend/src/lib/supabaseClient.ts`). Supabase redirects to Google, then
+   back to `${origin}/auth/callback` with a Supabase session encoded in the URL.
+2. `frontend/src/pages/AuthCallback.tsx` reads that session, grabs its
+   `access_token`, and `POST`s it to `/api/auth/supabase`.
+3. `controllers/supabase-auth-controller.js` validates the token against
+   Supabase, finds or creates the local user by email, and issues this app's
+   own session (same HMAC-signed token used by email/password login).
+4. The frontend stores that app token (`localStorage`, since Vercel and
+   Render are different domains — the HttpOnly cookie can't cross origins)
+   and sends it as `Authorization: Bearer <token>` on every request after
+   that (`frontend/src/lib/api.ts`).
+
+## 5. Common issues
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `redirect_uri_mismatch` | The URI in Google Cloud Console doesn't exactly match `GOOGLE_REDIRECT_URI` | Match them character-for-character, including `http` vs `https` and trailing slashes |
-| Redirected to `/login?error=google_oauth_not_configured` | Env vars missing/empty | Check `.env` / Render dashboard |
-| Redirected to `/login?error=google_invalid_state` | Cookie blocked (e.g. testing across two different origins without HTTPS) or the link was opened twice | Retry from a fresh `/login` page |
-| Works locally, fails in production | `GOOGLE_REDIRECT_URI` and `FRONTEND_URL` still point at `localhost` | Update both env vars on Render to your real domains, and add the prod redirect URI in Google Cloud Console |
+| Google button doesn't appear | `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` missing at build time | Set them in Vercel project settings and redeploy |
+| Redirected to Google, then straight back to `/login` with an error toast | `/auth/callback` URL isn't in Supabase's redirect allow-list | Add it under Authentication → URL Configuration |
+| "Google sign-in is not configured on this server" (401/503 from `/api/auth/supabase`) | Backend `SUPABASE_*` env vars missing | Check `.env` / Render dashboard |
+| Works locally, fails in production | Redirect URL allow-list only has `localhost` | Add your real Vercel domain's `/auth/callback` URL in Supabase |
 
-## 5. Production checklist
+## 6. Production checklist
 
-- [ ] Redirect URI in Google Cloud Console matches `GOOGLE_REDIRECT_URI` exactly
-- [ ] `FRONTEND_URL` points at your real Vercel domain (no trailing slash)
-- [ ] OAuth consent screen is out of "Testing" mode if you want any Google
-      user (not just added test users) to be able to sign in
+- [ ] Google provider enabled in Supabase with real Client ID/Secret
+- [ ] Production `/auth/callback` URL added to Supabase's redirect allow-list
+- [ ] `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` set on Vercel
+- [ ] `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` set on Render
 - [ ] `SESSION_SECRET` is a real random value (not the dev default)

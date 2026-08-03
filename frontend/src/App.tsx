@@ -4,6 +4,7 @@ import AuthGate from '@/components/AuthGate';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
+import AuthCallback from '@/pages/AuthCallback';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import NotFound from '@/pages/NotFound';
@@ -85,6 +86,7 @@ export default function App() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
 
         {/* Protected routes — wrapped in AuthGate + AppShell */}
         <Route

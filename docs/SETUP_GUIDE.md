@@ -278,30 +278,22 @@ RAZORPAY_WEBHOOK_SECRET=whsec_your-webhook-secret
 
 **Required for: "Continue with Google" button on login/signup. Without it, users sign up with email/password only.**
 
-### 4.1 Create Google OAuth credentials
+### 4.1 Set up Google sign-in via Supabase
 
-1. Go to https://console.cloud.google.com
-2. Create a new project (or use existing)
-3. Enable **Google+ API** and **Google Identity Services**
-4. Go to **APIs & Services** → **Credentials**
-5. Click **Create Credentials** → **OAuth client ID**
-6. Application type: **Web application**
-7. Authorized JavaScript origins:
-   - `http://localhost:3001` (dev)
-   - `https://your-frontend.vercel.app` (prod)
-8. Authorized redirect URIs:
-   - `http://localhost:3000/api/auth/google/callback` (dev)
-   - `https://your-backend.onrender.com/api/auth/google/callback` (prod)
-9. Copy the **Client ID** and **Client Secret**
+"Continue with Google" is handled by Supabase Auth, not a Google Cloud
+credential pasted into this app's `.env`. Full walkthrough:
+`docs/GOOGLE_AUTH_SETUP.md`. Short version:
 
-**Add to your `.env`:**
-```bash
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
-```
+1. Create a Google OAuth client at https://console.cloud.google.com/apis/credentials
+   with redirect URI `https://<your-supabase-project-ref>.supabase.co/auth/v1/callback`.
+2. Paste that Client ID/Secret into Supabase → Authentication → Providers → Google.
+3. Add `http://localhost:5173/auth/callback` and your production
+   `.../auth/callback` URL to Supabase → Authentication → URL Configuration
+   → Redirect URLs.
 
-> If `GOOGLE_CLIENT_ID` is not set, the Google button gracefully redirects to `/login?error=google_oauth_not_configured` and shows a friendly toast — the app still works with email/password.
+No extra backend env vars are needed — it reuses the `SUPABASE_*` vars from
+Step 3. If Supabase isn't configured, the Google button hides itself — the
+app still works with email/password.
 
 ---
 
@@ -317,11 +309,8 @@ GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
    - `OPENAI_API_KEY`
    - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
    - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
-   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (optional)
 6. Update the non-secret vars to your real URLs:
    - `ALLOWED_ORIGINS` = your Vercel URL (set after Step 6)
-   - `GOOGLE_REDIRECT_URI` = `https://your-backend.onrender.com/api/auth/google/callback`
-   - `FRONTEND_URL` = your Vercel URL
 
 ### Option B: Manual web service
 
@@ -364,8 +353,10 @@ Once Vercel gives you a URL like `https://ai-post-assistant.vercel.app`:
 1. Go to **Render backend** → **Environment**
 2. Update:
    - `ALLOWED_ORIGINS` = `https://ai-post-assistant.vercel.app`
-   - `FRONTEND_URL` = `https://ai-post-assistant.vercel.app`
 3. Save — Render auto-redeploys
+4. Add `https://ai-post-assistant.vercel.app/auth/callback` to Supabase's
+   redirect allow-list (Authentication → URL Configuration) so Google
+   sign-in works — see `docs/GOOGLE_AUTH_SETUP.md`.
 
 ### Verify
 
@@ -426,14 +417,10 @@ npm run build
 | `ALLOW_EXTENSION_ORIGIN` | No | `true` | Allow `chrome-extension://*` origins |
 | `SUPABASE_URL` | For prod | — | https://app.supabase.com → Settings → API |
 | `SUPABASE_ANON_KEY` | For prod | — | same |
-| `SUPABASE_SERVICE_ROLE_KEY` | For prod | — | same (keep secret!) |
+| `SUPABASE_SERVICE_ROLE_KEY` | For prod | — | same (keep secret!) — also powers "Continue with Google", see `docs/GOOGLE_AUTH_SETUP.md` |
 | `RAZORPAY_KEY_ID` | For payments | — | https://dashboard.razorpay.com/app/keys |
 | `RAZORPAY_KEY_SECRET` | For payments | — | same |
 | `RAZORPAY_WEBHOOK_SECRET` | For payments | — | https://dashboard.razorpay.com/app/webhooks |
-| `GOOGLE_CLIENT_ID` | Optional | — | https://console.cloud.google.com/apis/credentials |
-| `GOOGLE_CLIENT_SECRET` | Optional | — | same |
-| `GOOGLE_REDIRECT_URI` | Optional | — | `https://your-backend.onrender.com/api/auth/google/callback` |
-| `FRONTEND_URL` | No | — | Used for redirects/emails |
 
 ### Frontend (`/frontend/.env.local` or Vercel env vars)
 
@@ -477,13 +464,11 @@ The Razorpay webhook isn't being received. Check:
 2. Webhook URL in Razorpay dashboard = `https://your-backend.onrender.com/api/razorpay/webhook`
 3. Check Render logs for webhook hits
 
-### Google OAuth redirects back to /login?error=...
+### Google sign-in fails
 
-Check the error code in the URL:
-- `google_oauth_not_configured` → `GOOGLE_CLIENT_ID` / `SECRET` / `REDIRECT_URI` not set
-- `google_denied` → user cancelled
-- `google_invalid_state` → state cookie expired, retry
-- `google_auth_failed` → check backend logs
+See the troubleshooting table in `docs/GOOGLE_AUTH_SETUP.md`. Most common
+cause: the deployed origin's `/auth/callback` URL isn't in Supabase's
+redirect allow-list yet.
 
 ### Sidebar nav doesn't scroll
 

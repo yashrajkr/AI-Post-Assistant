@@ -41,6 +41,7 @@ services:
       - key: GROK_API_KEY
         sync: false
       - key: SUPABASE_URL
+        # Also powers "Continue with Google" — see docs/GOOGLE_AUTH_SETUP.md
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
@@ -52,14 +53,3 @@ services:
         sync: false
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
-      - key: GOOGLE_CLIENT_ID
-        sync: false  # optional — "Continue with Google", see docs/GOOGLE_AUTH_SETUP.md
-      - key: GOOGLE_CLIENT_SECRET
-        sync: false
-      - key: GOOGLE_REDIRECT_URI
-        # Replace with your real Render URL once deployed, e.g.
-        # https://ai-post-assistant-backend.onrender.com/api/auth/google/callback
-        value: https://your-backend.onrender.com/api/auth/google/callback
-      - key: FRONTEND_URL
-        # Replace with your Vercel frontend URL
-        value: https://your-frontend.vercel.app

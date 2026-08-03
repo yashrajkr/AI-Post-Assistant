@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { apiGet, apiPost, type User } from '@/lib/api';
+import { apiGet, apiPost, clearSessionToken, setSessionToken, type User } from '@/lib/api';
 
 /**
  * Auth context.
@@ -56,10 +56,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const data = await apiPost<{ success: boolean; user: User }>('/api/login', {
-        email,
-        password,
-      });
+      const data = await apiPost<{ success: boolean; token?: string; user: User }>(
+        '/api/login',
+        { email, password }
+      );
+      if (data.token) setSessionToken(data.token);
       setState({ user: data.user, loading: false, error: null });
       return data.user;
     },
@@ -68,11 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = useCallback(
     async (name: string, email: string, password: string) => {
-      const data = await apiPost<{ success: boolean; user: User }>('/api/signup', {
-        name,
-        email,
-        password,
-      });
+      const data = await apiPost<{ success: boolean; token?: string; user: User }>(
+        '/api/signup',
+        { name, email, password }
+      );
+      if (data.token) setSessionToken(data.token);
       setState({ user: data.user, loading: false, error: null });
       return data.user;
     },
@@ -85,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore — we clear client state regardless */
     }
+    clearSessionToken();
     setState({ user: null, loading: false, error: null });
   }, []);
 

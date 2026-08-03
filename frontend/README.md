@@ -84,8 +84,11 @@ npm run lint
    loading), it redirects to `/login` (preserving the original destination).
 3. Login/Signup mutations call `POST /api/login` and `POST /api/signup` respectively.
 4. Logout calls `POST /api/logout` and clears local state.
-5. Google OAuth is initiated by visiting `/api/auth/google` (a backend route that
-   redirects to Google's consent screen, then back to `/login?error=...` on failure).
+5. Google sign-in is initiated client-side via `supabase.auth.signInWithOAuth`
+   (`lib/supabaseClient.ts`). Supabase handles the Google consent screen and
+   redirects back to `/auth/callback`, which exchanges the Supabase session
+   for an app session via `POST /api/auth/supabase`. See
+   `../docs/GOOGLE_AUTH_SETUP.md`.
 
 ## Backend contract
 

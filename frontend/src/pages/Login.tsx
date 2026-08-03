@@ -5,6 +5,7 @@ import { Eye, EyeOff, Mail, Lock, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { ApiError } from '@/lib/api';
+import { isSupabaseConfigured, signInWithGoogle } from '@/lib/supabaseClient';
 import PublicHeader from '@/components/PublicHeader';
 
 export default function Login() {
@@ -18,6 +19,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const onGoogleClick = async () => {
+    try {
+      await signInWithGoogle();
+    } catch {
+      toast({ title: 'Google sign-in failed', description: 'Please try again.', tone: 'error' });
+    }
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -48,13 +57,16 @@ export default function Login() {
           <p className="mt-1 text-sm text-text-secondary">Login to continue creating</p>
         </div>
 
-        <a
-          href={`${import.meta.env.VITE_API_URL || ''}/api/auth/google`}
-          className="btn-secondary flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold"
-        >
-          <GoogleIcon />
-          Continue with Google
-        </a>
+        {isSupabaseConfigured && (
+          <button
+            type="button"
+            onClick={onGoogleClick}
+            className="btn-secondary flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold"
+          >
+            <GoogleIcon />
+            Continue with Google
+          </button>
+        )}
 
         <div className="my-5 flex items-center gap-3 text-xs text-text-tertiary">
           <span className="h-px flex-1 bg-border" />

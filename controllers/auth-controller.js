@@ -56,7 +56,7 @@ function login(req, res) {
     }
     const token = signSession(user.id, env.SESSION_SECRET);
     res.cookie('session', token, COOKIE_OPTIONS);
-    return res.status(200).json({ success: true, user: publicUser(user) });
+    return res.status(200).json({ success: true, token, user: publicUser(user) });
   })(req, res);
 }
 

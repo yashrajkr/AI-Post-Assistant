@@ -31,7 +31,7 @@ const {
 } = require('../utils/validators');
 
 const auth = require('./auth');
-const googleAuth = require('../controllers/google-auth-controller');
+const supabaseAuth = require('../controllers/supabase-auth-controller');
 const generate = require('./generate');
 const schedule = require('./schedule');
 const analytics = require('./analytics');
@@ -66,9 +66,9 @@ module.exports = function buildRoutes(app) {
   app.post('/api/logout', auth.logout);
   app.get('/api/me', auth.me);
 
-  // Google OAuth ("Continue with Google") — disabled gracefully if not configured.
-  app.get('/api/auth/google', authLimiter, googleAuth.loginUrl);
-  app.get('/api/auth/google/callback', authLimiter, googleAuth.callback);
+  // Google sign-in via Supabase Auth — disabled gracefully if Supabase isn't configured.
+  app.get('/api/auth/google-config', supabaseAuth.googleConfig);
+  app.post('/api/auth/supabase', authLimiter, supabaseAuth.exchange);
 
   // Templates (public)
   app.get('/api/templates', (req, res) => {

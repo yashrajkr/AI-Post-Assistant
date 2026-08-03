@@ -71,14 +71,6 @@ const env = {
 
   // Sentry (optional)
   SENTRY_DSN: process.env.SENTRY_DSN || '',
-
-  // Google OAuth (optional — login form works without it)
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
-  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
-  GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI || '',
-
-  // Where to send the browser after auth (Next.js frontend origin, no trailing slash)
-  FRONTEND_URL: (process.env.FRONTEND_URL || 'http://localhost:3001').replace(/\/$/, ''),
 };
 
 env.isProduction = env.NODE_ENV === 'production';
@@ -99,10 +91,6 @@ env.hasRazorpay = Boolean(
 env.hasOpenAI = Boolean(env.OPENAI_API_KEY);
 env.hasGemini = Boolean(env.GEMINI_API_KEY);
 env.hasGrok = Boolean(env.GROK_API_KEY);
-
-env.hasGoogleOAuth = Boolean(
-  env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REDIRECT_URI
-);
 
 /**
  * Returns a list of startup warnings (non-fatal issues).
@@ -129,8 +117,8 @@ function startupWarnings() {
     warnings.push('Supabase keys missing. Falling back to local JSON file storage (NOT for production).');
   }
 
-  if (!env.hasGoogleOAuth) {
-    warnings.push('Google OAuth env vars missing. "Continue with Google" will be disabled (email/password still works).');
+  if (!env.hasSupabase) {
+    warnings.push('Supabase not configured — "Continue with Google" will be disabled (email/password still works).');
   }
 
   if (env.isProduction && !env.hasRazorpay) {

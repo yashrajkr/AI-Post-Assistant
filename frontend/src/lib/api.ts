@@ -14,6 +14,25 @@ export const API_URL =
   // In prod, both are usually served from the same origin.
   '';
 
+/**
+ * Session token storage for cross-origin auth (Vercel frontend -> Render
+ * backend). Set after the Google OAuth callback delivers a token via query
+ * param, since the HttpOnly session cookie can't be read/sent cross-domain.
+ */
+const SESSION_TOKEN_KEY = 'apa_session_token';
+
+export function setSessionToken(token: string) {
+  localStorage.setItem(SESSION_TOKEN_KEY, token);
+}
+
+export function getSessionToken(): string | null {
+  return localStorage.getItem(SESSION_TOKEN_KEY);
+}
+
+export function clearSessionToken() {
+  localStorage.removeItem(SESSION_TOKEN_KEY);
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -50,10 +69,13 @@ export async function api<T = unknown>(
   const isFormData =
     typeof FormData !== 'undefined' && options?.body instanceof FormData;
 
+  const sessionToken = getSessionToken();
+
   const res = await fetch(`${API_URL}${path}`, {
     credentials: 'include',
     headers: {
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
       ...options?.headers,
     },
     ...options,

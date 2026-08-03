@@ -17,11 +17,11 @@ independently of the Next.js frontend.
      here — it's allowed separately via `ALLOW_EXTENSION_ORIGIN=true`
      (already set in `render.yaml`), which lets any `chrome-extension://`
      origin through regardless of extension ID.
-   - `GOOGLE_REDIRECT_URI` / `FRONTEND_URL` → your real URLs, once known
-   - Any `sync: false` key (`OPENAI_API_KEY`, `SUPABASE_*`,
-     `RAZORPAY_*`, `GOOGLE_CLIENT_*`) → fill in manually in the Render
-     dashboard after the service is created (these are intentionally not
-     stored in the repo).
+   - Any `sync: false` key (`OPENAI_API_KEY`, `SUPABASE_*`, `RAZORPAY_*`)
+     → fill in manually in the Render dashboard after the service is
+     created (these are intentionally not stored in the repo).
+     `SUPABASE_*` also powers "Continue with Google" — see
+     `docs/GOOGLE_AUTH_SETUP.md`.
 5. Apply. Render builds with `npm install` and starts with `npm start`.
 
 ## Option B — Manual Web Service
@@ -74,11 +74,9 @@ session secret.
 
 1. Copy the Render URL (e.g. `https://ai-post-assistant-backend.onrender.com`).
 2. Set it as `NEXT_PUBLIC_API_URL` on Vercel (see `VERCEL_DEPLOYMENT.md`).
-3. Update `GOOGLE_REDIRECT_URI` (this backend URL + `/api/auth/google/callback`)
-   in both this service's env vars and your Google Cloud OAuth client's
-   Authorized Redirect URIs.
-4. Update `FRONTEND_URL` to your real Vercel URL.
-5. Hit `https://your-backend.onrender.com/api/health` — should return
+3. For "Continue with Google", follow `docs/GOOGLE_AUTH_SETUP.md` — it's
+   configured in the Supabase dashboard, not via env vars on this service.
+4. Hit `https://your-backend.onrender.com/api/health` — should return
    `{"success":true,...}`.
 6. Run `npm run smoke` locally against the deployed URL if you want to
    sanity-check the deployed API (point `BASE_URL` in the smoke test's env
