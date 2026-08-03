@@ -26,10 +26,9 @@ services:
       - key: AI_MAX_RETRIES
         value: "3"
       - key: ALLOWED_ORIGINS
-        # Replace with your Vercel frontend URL after deploying frontend.
         # Chrome extension access is handled separately by ALLOW_EXTENSION_ORIGIN below
         # (exact-string ALLOWED_ORIGINS matching can't wildcard chrome-extension:// IDs).
-        value: https://your-frontend.vercel.app
+        value: https://ai-post-assistant.vercel.app
       - key: ALLOW_EXTENSION_ORIGIN
         value: "true"
       - key: SESSION_SECRET
@@ -57,9 +56,10 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: GOOGLE_REDIRECT_URI
-        # Replace with your real Render URL once deployed, e.g.
-        # https://ai-post-assistant-backend.onrender.com/api/auth/google/callback
-        value: https://your-backend.onrender.com/api/auth/google/callback
+        # MUST point at the frontend (Vercel) origin, not this Render domain —
+        # frontend/vercel.json rewrites /api/* here, keeping the session cookie
+        # same-origin for the browser. Register this exact URL in Google Cloud
+        # Console under "Authorized redirect URIs".
+        value: https://ai-post-assistant.vercel.app/api/auth/google/callback
       - key: FRONTEND_URL
-        # Replace with your Vercel frontend URL
-        value: https://your-frontend.vercel.app
+        value: https://ai-post-assistant.vercel.app

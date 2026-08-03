@@ -13,8 +13,18 @@ friendly message.
 3. Click **Create Credentials → OAuth client ID**.
 4. Application type: **Web application**.
 5. Under **Authorized redirect URIs**, add:
-   - Local dev: `http://localhost:3000/api/auth/google/callback`
-   - Production: `https://your-backend-domain.com/api/auth/google/callback`
+   - Local dev: `http://localhost:3001/api/auth/google/callback`
+   - Production: `https://ai-post-assistant.vercel.app/api/auth/google/callback`
+
+   **Important:** the redirect URI points at the **frontend** origin, not the
+   Express backend's own domain. `frontend/vite.config.ts` (dev) and
+   `frontend/vercel.json` (prod) both rewrite/proxy `/api/*` to the backend,
+   so the browser only ever talks to the frontend origin. That keeps the
+   session cookie set during the callback on the *same* origin the app later
+   calls `/api/me` from. If you point Google at the raw backend domain
+   instead, the login will "succeed" but the dashboard will still show you
+   as logged out, because the cookie ends up on a different origin than the
+   one the frontend fetches from.
 6. Save. Copy the **Client ID** and **Client secret**.
 
 If you see this project has no OAuth consent screen configured yet, you'll be
@@ -26,10 +36,17 @@ a test user is enough to start.
 In `.env` (local) or your Render environment variables (production):
 
 ```env
+# Local dev
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback   # or your prod URL
-FRONTEND_URL=http://localhost:3001                                   # or your Vercel URL
+GOOGLE_REDIRECT_URI=http://localhost:3001/api/auth/google/callback
+FRONTEND_URL=http://localhost:3001
+
+# Production (Render env vars)
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_REDIRECT_URI=https://ai-post-assistant.vercel.app/api/auth/google/callback
+FRONTEND_URL=https://ai-post-assistant.vercel.app
 ```
 
 Restart the server. The startup log should stop warning about missing Google
@@ -60,11 +77,14 @@ OAuth vars.
 | Redirected to `/login?error=google_oauth_not_configured` | Env vars missing/empty | Check `.env` / Render dashboard |
 | Redirected to `/login?error=google_invalid_state` | Cookie blocked (e.g. testing across two different origins without HTTPS) or the link was opened twice | Retry from a fresh `/login` page |
 | Works locally, fails in production | `GOOGLE_REDIRECT_URI` and `FRONTEND_URL` still point at `localhost` | Update both env vars on Render to your real domains, and add the prod redirect URI in Google Cloud Console |
+| Redirects to `/dashboard` but the app still shows logged out | `GOOGLE_REDIRECT_URI` points at the raw backend (`*.onrender.com`) instead of the frontend (`ai-post-assistant.vercel.app`) | Change `GOOGLE_REDIRECT_URI` to the Vercel URL's `/api/auth/google/callback` and update the redirect URI in Google Cloud Console to match — see the note in step 1 |
 
 ## 5. Production checklist
 
-- [ ] Redirect URI in Google Cloud Console matches `GOOGLE_REDIRECT_URI` exactly
-- [ ] `FRONTEND_URL` points at your real Vercel domain (no trailing slash)
+- [ ] Redirect URI in Google Cloud Console is `https://ai-post-assistant.vercel.app/api/auth/google/callback` and matches `GOOGLE_REDIRECT_URI` on Render exactly
+- [ ] `FRONTEND_URL=https://ai-post-assistant.vercel.app` (no trailing slash) on Render
+- [ ] `ALLOWED_ORIGINS=https://ai-post-assistant.vercel.app` on Render
+- [ ] Do **not** set `VITE_API_URL` on Vercel — leave it unset so the frontend calls `/api/...` (relative), which `frontend/vercel.json` rewrites to the Render backend, keeping requests same-origin from the browser's point of view
 - [ ] OAuth consent screen is out of "Testing" mode if you want any Google
       user (not just added test users) to be able to sign in
 - [ ] `SESSION_SECRET` is a real random value (not the dev default)
