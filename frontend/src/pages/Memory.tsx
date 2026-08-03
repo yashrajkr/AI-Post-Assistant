@@ -143,7 +143,7 @@ export default function Memory() {
   const hasItems = (groups || []).some((g) => g.items.length > 0);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <PageHeader badge="Module 3 · AI Memory" title="What AI remembers" subtitle="The AI learns from your generations. Manage what it stores here.">
         {hasItems && (
           <button onClick={() => setShowClear(true)} className="btn-ghost inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium hover:text-error">

@@ -33,7 +33,7 @@ export default function Help() {
 
       <PublicHeader />
 
-      <section className="relative z-10 mx-auto max-w-6xl px-4 pt-16 pb-20 md:pt-24">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pt-16 pb-20 md:pt-24">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand">
             <LifeBuoy className="h-3 w-3" /> Help Center

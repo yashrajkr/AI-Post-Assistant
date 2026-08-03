@@ -141,7 +141,7 @@ export default function Features() {
       <PublicHeader />
 
       {/* Hero */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 pt-16 pb-20 md:pt-24">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pt-16 pb-20 md:pt-24">
         <motion.div {...fadeUp} transition={{ duration: 0.5 }} className="text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand">
             <Sparkles className="h-3 w-3" /> Features
@@ -180,7 +180,7 @@ export default function Features() {
       </section>
 
       {/* Hero feature cards */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 pb-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-20">
         <div className="grid gap-5 md:grid-cols-2">
           {heroFeatures.map((f, i) => {
             const Icon = f.icon;
@@ -211,7 +211,7 @@ export default function Features() {
       </section>
 
       {/* Feature modules */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 pb-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-20">
         <div className="mb-10 text-center">
           <span className="text-xs font-semibold uppercase tracking-wider text-brand">Modules</span>
           <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl">
@@ -242,7 +242,7 @@ export default function Features() {
       </section>
 
       {/* Testimonials */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 pb-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-20">
         <div className="mb-10 text-center">
           <span className="text-xs font-semibold uppercase tracking-wider text-brand">Loved by creators</span>
           <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl">Trusted by creators &amp; businesses</h2>
@@ -276,7 +276,7 @@ export default function Features() {
       </section>
 
       {/* Trust */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 pb-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-20">
         <div className="grid gap-5 md:grid-cols-3">
           {trust.map((t, i) => {
             const Icon = t.icon;

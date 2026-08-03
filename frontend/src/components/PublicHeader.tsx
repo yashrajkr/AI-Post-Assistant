@@ -170,7 +170,7 @@ export default function PublicHeader() {
 
   return (
     <header className="glass sticky top-0 z-50 border-b border-border">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         {/* Logo */}
         <Link
           to="/"
@@ -184,12 +184,12 @@ export default function PublicHeader() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
           {navLinks.map((link) => renderLink(link))}
         </nav>
 
         {/* Desktop CTAs */}
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           {user ? (
             <div className="relative" ref={accountRef}>
               <button
@@ -258,7 +258,7 @@ export default function PublicHeader() {
         {/* Mobile hamburger */}
         <button
           onClick={() => setMobileOpen((s) => !s)}
-          className="btn-ghost rounded-lg p-2 md:hidden"
+          className="btn-ghost rounded-lg p-2 lg:hidden"
           aria-label="Toggle menu"
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav"
@@ -276,9 +276,9 @@ export default function PublicHeader() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden border-t border-border bg-surface md:hidden"
+            className="overflow-hidden border-t border-border bg-surface lg:hidden"
           >
-            <nav className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3" aria-label="Mobile">
+            <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3" aria-label="Mobile">
               {navLinks.map((link) =>
                 'icon' in link && link.icon ? (
                   <NavLink

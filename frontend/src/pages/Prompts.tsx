@@ -136,7 +136,7 @@ export default function Prompts() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-6">
       <PageHeader badge="Module 4 · Prompt Library" title="Prompt library" subtitle="Save and reuse your best AI prompts.">
         <button onClick={() => setShowCreate(true)} className="btn-brand inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold">
           <Plus className="h-4 w-4" />

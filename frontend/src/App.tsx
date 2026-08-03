@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AppShell from '@/components/AppShell';
 import AuthGate from '@/components/AuthGate';
+import InstallPrompt from '@/components/InstallPrompt';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
@@ -116,6 +117,7 @@ export default function App() {
         {/* 404 — keep last */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <InstallPrompt />
     </BrowserRouter>
   );
 }

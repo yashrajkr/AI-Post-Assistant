@@ -32,7 +32,7 @@ export default function Campaigns() {
   }));
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-6">
       <PageHeader badge="v2 · Campaign Builder" title="Campaign builder" subtitle="Generate a cohesive multi-post campaign across platforms." />
 
       <Card className="p-6">
