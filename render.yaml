@@ -16,11 +16,15 @@ services:
       - key: NODE_ENV
         value: production
       - key: AI_PROVIDER
-        value: openai
+        # groq.com has a free tier — good default if you don't have paid
+        # OpenAI/Gemini keys yet. Switch to openai/gemini/grok once you do.
+        value: groq
       - key: OPENAI_MODEL
         value: gpt-4o-mini
       - key: GEMINI_MODEL
         value: gemini-1.5-flash
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
       - key: AI_TIMEOUT_MS
         value: "30000"
       - key: AI_MAX_RETRIES
@@ -32,14 +36,14 @@ services:
         value: https://your-frontend.vercel.app
       - key: ALLOW_EXTENSION_ORIGIN
         value: "true"
-      - key: SESSION_SECRET
-        generateValue: true  # Render auto-generates a secure random value
       - key: OPENAI_API_KEY
         sync: false  # set manually in Render dashboard
       - key: GEMINI_API_KEY
         sync: false
       - key: GROK_API_KEY
         sync: false
+      - key: GROQ_API_KEY
+        sync: false  # groq.com key, looks like gsk_... — different from GROK_API_KEY above
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
@@ -52,14 +56,9 @@ services:
         sync: false
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
-      - key: GOOGLE_CLIENT_ID
-        sync: false  # optional — "Continue with Google", see docs/GOOGLE_AUTH_SETUP.md
-      - key: GOOGLE_CLIENT_SECRET
-        sync: false
-      - key: GOOGLE_REDIRECT_URI
-        # Replace with your real Render URL once deployed, e.g.
-        # https://ai-post-assistant-backend.onrender.com/api/auth/google/callback
-        value: https://your-backend.onrender.com/api/auth/google/callback
+      # Google OAuth is configured in the Supabase Dashboard (Authentication ->
+      # Providers -> Google), NOT here — see docs/GOOGLE_SETUP.md. This backend
+      # has no Google client id/secret/redirect of its own.
       - key: FRONTEND_URL
         # Replace with your Vercel frontend URL
         value: https://your-frontend.vercel.app

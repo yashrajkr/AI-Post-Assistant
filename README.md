@@ -107,18 +107,18 @@ AI Post Assistant/
 │   ├── rate-limits.js         # Global + auth + AI rate limiters
 │   └── asyncHandler.js
 ├── utils/
-│   ├── helpers.js             # passwordHash, signSession, publicUser, etc.
+│   ├── helpers.js             # publicUser, legacy passwordHash (migration only), etc.
 │   ├── validators.js          # Zod schemas for every request body
 │   └── logger.js
 ├── scripts/
 │   ├── migrate-json-to-supabase.js   # One-time migration
 │   └── _archive/                     # Old v9 lib/ preserved as backup
-├── public/                    # Vanilla HTML/CSS/JS frontend
-│   ├── index.html, login.html, signup.html
-│   ├── dashboard.html, generate.html, pricing.html
-│   ├── schedule.html, analytics.html, profile.html
-│   ├── app.js                 # Shared frontend helpers (loading/error/empty states)
-│   └── style.css
+├── frontend/                  # The real frontend: Vite + React + TS, deployed to Vercel
+│                              # (an older vanilla HTML/CSS/JS frontend used to live in
+│                              #  public/ and was served by this server — removed, see
+│                              #  AUTH_AUDIT.md, since it duplicated this app and its
+│                              #  login/signup pages called auth endpoints that no
+│                              #  longer exist post-Supabase-Auth-migration)
 ├── tests/
 │   └── smoke-test.js          # End-to-end API test
 ├── docs/
@@ -135,16 +135,19 @@ AI Post Assistant/
 
 ## API reference
 
+Auth (signup, login, logout, Google OAuth, password reset, email
+verification) is Supabase Auth, run entirely from the frontend via
+`supabase-js` — there's no `/api/signup` or `/api/login` on this server.
+"Yes" below means the request needs `Authorization: Bearer <supabase access
+token>`. See `AUTH_SETUP.md`.
+
 | Method | Path                        | Auth | Description                                  |
 |--------|-----------------------------|------|----------------------------------------------|
 | GET    | /api/health                 | No   | App + AI provider + DB health                |
 | GET    | /api/ai/health              | No   | Per-provider AI ping                         |
 | GET    | /api/plans                  | No   | List subscription plans                      |
 | GET    | /api/templates              | No   | List post templates                          |
-| POST   | /api/signup                 | No   | Create account (rate-limited 5/15min)        |
-| POST   | /api/login                  | No   | Login (rate-limited 5/15min)                 |
-| POST   | /api/logout                 | No   | Clear session                                |
-| GET    | /api/me                     | Yes  | Current user                                 |
+| GET    | /api/me                     | Yes  | Current user (auto-creates profile row on first call) |
 | POST   | /api/profile                | Yes  | Update name + brand voice                    |
 | POST   | /api/upgrade                | Yes  | Manual plan upgrade (admin/test)             |
 | POST   | /api/generate               | Yes  | Generate content (rate-limited per plan)     |
@@ -163,13 +166,12 @@ See `.env.example` for the full list with comments. Critical ones:
 
 | Variable                  | Required in prod | Purpose                                |
 |---------------------------|------------------|----------------------------------------|
-| `SESSION_SECRET`          | Yes              | HMAC secret for session cookies        |
 | `AI_PROVIDER`             | Yes              | `openai`, `gemini`, `grok`, or `mock`  |
 | `OPENAI_API_KEY`          | If `openai`      | OpenAI API key                         |
 | `GEMINI_API_KEY`          | If `gemini`      | Gemini API key                         |
-| `SUPABASE_URL`            | Recommended      | Supabase project URL                   |
-| `SUPABASE_ANON_KEY`       | Recommended      | Supabase anon key                      |
-| `SUPABASE_SERVICE_ROLE_KEY` | Recommended    | Supabase service role key (server only)|
+| `SUPABASE_URL`            | Yes              | Supabase project URL — required for auth, not just storage |
+| `SUPABASE_ANON_KEY`       | Yes              | Supabase anon key                      |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes            | Supabase service role key (server only, verifies auth tokens) |
 | `RAZORPAY_KEY_ID`         | For payments     | Razorpay key ID                        |
 | `RAZORPAY_KEY_SECRET`     | For payments     | Razorpay key secret                    |
 | `RAZORPAY_WEBHOOK_SECRET` | For webhooks     | Razorpay webhook secret                |

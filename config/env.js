@@ -35,7 +35,6 @@ const env = {
   PORT: Number(process.env.PORT || 3000),
   APP_NAME: process.env.APP_NAME || 'PostReady AI',
   NODE_ENV: (process.env.NODE_ENV || 'development').toLowerCase(),
-  SESSION_SECRET: process.env.SESSION_SECRET || 'dev-only-secret-change-me',
   // Comma-separated list of allowed CORS origins.
   // Include chrome-extension://* to allow Chrome extension to call the API.
   // In production: 'https://your-app.vercel.app,chrome-extension://*'
@@ -55,9 +54,15 @@ const env = {
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
   GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
 
-  // Grok (optional, not primary)
+  // Grok — xAI's model, api.x.ai (optional, not primary)
   GROK_API_KEY: process.env.GROK_API_KEY || '',
   GROK_MODEL: process.env.GROK_MODEL || 'grok-4.1-fast',
+
+  // Groq — groq.com's fast-inference cloud (OpenAI-compatible API), free tier
+  // available. NOTE: this is a different company/API than "Grok" (xAI) above —
+  // Groq API keys look like `gsk_...`. Easy to mix up; both are supported.
+  GROQ_API_KEY: process.env.GROQ_API_KEY || '',
+  GROQ_MODEL: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
 
   // Supabase
   SUPABASE_URL: process.env.SUPABASE_URL || '',
@@ -72,12 +77,9 @@ const env = {
   // Sentry (optional)
   SENTRY_DSN: process.env.SENTRY_DSN || '',
 
-  // Google OAuth (optional — login form works without it)
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
-  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
-  GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI || '',
-
-  // Where to send the browser after auth (Next.js frontend origin, no trailing slash)
+  // Where to send the browser after auth (frontend origin, no trailing slash).
+  // Google OAuth itself is configured in the Supabase dashboard
+  // (Authentication -> Providers -> Google), not here — see docs/GOOGLE_SETUP.md.
   FRONTEND_URL: (process.env.FRONTEND_URL || 'http://localhost:3001').replace(/\/$/, ''),
 };
 
@@ -99,10 +101,7 @@ env.hasRazorpay = Boolean(
 env.hasOpenAI = Boolean(env.OPENAI_API_KEY);
 env.hasGemini = Boolean(env.GEMINI_API_KEY);
 env.hasGrok = Boolean(env.GROK_API_KEY);
-
-env.hasGoogleOAuth = Boolean(
-  env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REDIRECT_URI
-);
+env.hasGroq = Boolean(env.GROQ_API_KEY);
 
 /**
  * Returns a list of startup warnings (non-fatal issues).
@@ -110,10 +109,6 @@ env.hasGoogleOAuth = Boolean(
  */
 function startupWarnings() {
   const warnings = [];
-
-  if (env.SESSION_SECRET === 'dev-only-secret-change-me' || env.SESSION_SECRET.includes('change-this')) {
-    warnings.push('SESSION_SECRET is using a development value. Change it before deployment.');
-  }
 
   if (env.AI_PROVIDER === 'openai' && !env.hasOpenAI) {
     warnings.push('AI_PROVIDER=openai but OPENAI_API_KEY is missing. Will fall back to mock.');
@@ -124,13 +119,12 @@ function startupWarnings() {
   if (env.AI_PROVIDER === 'grok' && !env.hasGrok) {
     warnings.push('AI_PROVIDER=grok but GROK_API_KEY is missing. Will fall back to mock.');
   }
-
-  if (!env.hasSupabase) {
-    warnings.push('Supabase keys missing. Falling back to local JSON file storage (NOT for production).');
+  if (env.AI_PROVIDER === 'groq' && !env.hasGroq) {
+    warnings.push('AI_PROVIDER=groq but GROQ_API_KEY is missing. Will fall back to mock.');
   }
 
-  if (!env.hasGoogleOAuth) {
-    warnings.push('Google OAuth env vars missing. "Continue with Google" will be disabled (email/password still works).');
+  if (!env.hasSupabase) {
+    warnings.push('Supabase keys missing. Auth and storage will not work — see docs/SUPABASE_SETUP.md.');
   }
 
   if (env.isProduction && !env.hasRazorpay) {
@@ -155,8 +149,9 @@ function startupGuard() {
     return false;
   }
 
-  if (env.isProduction && env.SESSION_SECRET === 'dev-only-secret-change-me') {
-    console.error('\n[FATAL] SESSION_SECRET is the default dev value in production. Refusing to start.\n');
+  if (env.isProduction && !env.hasSupabase) {
+    console.error('\n[FATAL] SUPABASE_URL/SUPABASE_ANON_KEY/SUPABASE_SERVICE_ROLE_KEY missing in production.');
+    console.error('        Supabase Auth cannot function without them. Refusing to start.\n');
     return false;
   }
 

@@ -234,6 +234,84 @@ async function generateWithGrok(input, user, opts = {}) {
   return normalizeAiOutput(parsePotentialJson(text));
 }
 
+/**
+ * Groq (groq.com) — OpenAI-compatible chat completions API, free tier.
+ * Not to be confused with "Grok" (xAI, api.x.ai) above — different company.
+ */
+async function generateWithGroq(input, user, opts = {}) {
+  const response = await callWithTimeout(
+    () =>
+      fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: env.GROQ_MODEL,
+          messages: [
+            { role: 'system', content: 'Return only valid JSON.' },
+            { role: 'user', content: makePrompt(input, user, opts) },
+          ],
+          temperature: 0.7,
+        }),
+      }),
+    env.AI_TIMEOUT_MS,
+    'groq'
+  );
+
+  if (!response.ok) {
+    const txt = await response.text().catch(() => '');
+    throw new Error(`Groq error ${response.status}: ${txt.slice(0, 200)}`);
+  }
+
+  const json = await response.json();
+  const text = json.choices?.[0]?.message?.content || '{}';
+  return normalizeAiOutput(parsePotentialJson(text));
+}
+
+/**
+ * Shared helper for the secondary features (score/repurpose/calendar/
+ * campaign/document/brand-health) — both OpenAI and Groq speak the same
+ * chat-completions wire format, so one function drives both.
+ */
+async function chatJson({ baseUrl, apiKey, model, prompt, temperature = 0.7, label }) {
+  const resp = await callWithTimeout(
+    () =>
+      fetch(baseUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: 'Return only valid JSON.' },
+            { role: 'user', content: prompt },
+          ],
+          temperature,
+        }),
+      }),
+    env.AI_TIMEOUT_MS,
+    label
+  );
+  if (!resp.ok) {
+    const txt = await resp.text().catch(() => '');
+    throw new Error(`${label} error ${resp.status}: ${txt.slice(0, 200)}`);
+  }
+  const json = await resp.json();
+  return json.choices?.[0]?.message?.content || '{}';
+}
+
+function groqChatJson(prompt, label, temperature = 0.7) {
+  return chatJson({
+    baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
+    apiKey: env.GROQ_API_KEY,
+    model: env.GROQ_MODEL,
+    prompt,
+    temperature,
+    label,
+  });
+}
+
 function generateMock(input, user) {
   const prefix = templatePrefix(input.template);
   const niche = input.niche;
@@ -300,6 +378,7 @@ function buildChain() {
     openai: { name: 'openai', available: env.hasOpenAI, fn: generateWithOpenAI },
     gemini: { name: 'gemini', available: env.hasGemini, fn: generateWithGemini },
     grok: { name: 'grok', available: env.hasGrok, fn: generateWithGrok },
+    groq: { name: 'groq', available: env.hasGroq, fn: generateWithGroq },
   };
 
   // Primary first
@@ -425,6 +504,9 @@ Include 1-3 suggestions for dimensions scoring below 85.`;
           const json = await resp.json();
           return normalizeScore(parsePotentialJson(json.candidates?.[0]?.content?.parts?.[0]?.text || '{}'));
         }
+        if (provider.name === 'groq') {
+          return normalizeScore(parsePotentialJson(await groqChatJson(prompt, 'groq-score', 0.3)));
+        }
         throw new Error('Provider not supported for scoring');
       }, env.AI_MAX_RETRIES, provider.name + '-score');
       return { success: true, provider: provider.name, score: result, error: null };
@@ -496,6 +578,9 @@ For each platform include: caption (or post/thread/message/title+description for
           if (!resp.ok) throw new Error(`Gemini repurpose error ${resp.status}`);
           const json = await resp.json();
           return parsePotentialJson(json.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
+        }
+        if (provider.name === 'groq') {
+          return parsePotentialJson(await groqChatJson(prompt, 'groq-repurpose'));
         }
         throw new Error('Provider not supported for repurpose');
       }, env.AI_MAX_RETRIES, provider.name + '-repurpose');
@@ -656,6 +741,17 @@ async function healthCheck() {
     result.gemini = 'not-configured';
   }
 
+  if (env.hasGroq) {
+    try {
+      await withRetry(() => generateWithGroq(probe, probeUser), 1, 'groq-health');
+      result.groq = 'ok';
+    } catch (err) {
+      result.groq = `down: ${err.message}`;
+    }
+  } else {
+    result.groq = 'not-configured';
+  }
+
   return result;
 }
 
@@ -722,6 +818,9 @@ Rules:
           if (!resp.ok) throw new Error(`Gemini calendar error ${resp.status}`);
           const json = await resp.json();
           return parsePotentialJson(json.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
+        }
+        if (provider.name === 'groq') {
+          return parsePotentialJson(await groqChatJson(prompt, 'groq-calendar'));
         }
         throw new Error('Provider not supported for calendar');
       }, env.AI_MAX_RETRIES, provider.name + '-calendar');
@@ -818,6 +917,9 @@ Rules:
           if (!resp.ok) throw new Error(`Gemini campaign error ${resp.status}`);
           const json = await resp.json();
           return parsePotentialJson(json.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
+        }
+        if (provider.name === 'groq') {
+          return parsePotentialJson(await groqChatJson(prompt, 'groq-campaign'));
         }
         throw new Error('Provider not supported for campaign');
       }, env.AI_MAX_RETRIES, provider.name + '-campaign');
@@ -950,6 +1052,9 @@ Keep each bullet under 15 words.`;
             if (!resp.ok) throw new Error(`Gemini brand health error ${resp.status}`);
             const json = await resp.json();
             return parsePotentialJson(json.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
+          }
+          if (provider.name === 'groq') {
+            return parsePotentialJson(await groqChatJson(prompt, 'groq-brand-health', 0.5));
           }
           throw new Error('Provider not supported');
         }, 1, provider.name + '-brand-health');
@@ -1092,6 +1197,9 @@ Return strict JSON: {
           if (!resp.ok) throw new Error(`Gemini document error ${resp.status}`);
           const json = await resp.json();
           return parsePotentialJson(json.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
+        }
+        if (provider.name === 'groq') {
+          return parsePotentialJson(await groqChatJson(prompt, 'groq-document'));
         }
         throw new Error('Provider not supported for document');
       }, env.AI_MAX_RETRIES, provider.name + '-document');

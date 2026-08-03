@@ -1,5 +1,11 @@
 # 🚀 AI Post Assistant v16 (ff) — Complete Setup Guide
 
+> ⚠️ **Auth section superseded.** Any `SESSION_SECRET`/`GOOGLE_CLIENT_ID`/
+> `/api/signup`/`/api/login` references below are stale — auth is now
+> Supabase Auth. See `/AUTH_SETUP.md`, `/SUPABASE_SETUP.md`,
+> `/GOOGLE_SETUP.md` (repo root) for the current setup. Everything else in
+> this guide (AI provider keys, Razorpay, general env vars) is still accurate.
+
 **The single source of truth for going from zero to production.**
 
 This guide walks you through every key you need, every service you need to set up, and every environment variable you need to fill in. Follow it in order.

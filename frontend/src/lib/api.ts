@@ -4,9 +4,12 @@
  * The backend runs on http://localhost:3000 in dev (see ../server.js).
  * In production, set VITE_API_URL to the public backend URL.
  *
- * All requests include credentials (session cookie) so the server-side
- * attachUser/requireAuth middleware can identify the user.
+ * Auth is stateless: every request carries the current Supabase Auth
+ * access token as `Authorization: Bearer <token>`. This works identically
+ * whether frontend and backend share an origin (localhost) or not
+ * (Vercel frontend -> Render backend) — no cookies involved.
  */
+import { supabase } from './supabaseClient';
 
 export const API_URL =
   (import.meta.env.VITE_API_URL as string | undefined) ||
@@ -50,10 +53,14 @@ export async function api<T = unknown>(
   const isFormData =
     typeof FormData !== 'undefined' && options?.body instanceof FormData;
 
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   const res = await fetch(`${API_URL}${path}`, {
-    credentials: 'include',
     headers: {
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
       ...options?.headers,
     },
     ...options,
@@ -111,6 +118,8 @@ export interface User {
   name?: string;
   firstName?: string;
   lastName?: string;
+  avatarUrl?: string | null;
+  provider?: string;
   plan: 'free' | 'creator' | 'pro' | 'team' | string;
   credits: number;
   creditsTotal?: number;

@@ -1,69 +1,17 @@
 /**
  * controllers/auth-controller.js
- * Signup, login, logout, current-user.
+ * Identity (signup/login/logout/Google/password reset/email verification)
+ * is owned entirely by Supabase Auth and driven from the frontend via
+ * supabase-js — this backend never sees a password.
+ *
+ * This controller only handles the app-level profile that hangs off a
+ * Supabase user: `GET /api/me` (auto-creates the profile row on first call,
+ * via requireAuth -> attachUser -> getOrCreateProfile) and profile updates.
  */
 
-const crypto = require('crypto');
-const { env } = require('../config/env');
 const { asyncHandler } = require('../middleware/asyncHandler');
-const { passwordHash, verifyPassword, signSession, publicUser } = require('../utils/helpers');
-const { PLAN_CREDITS } = require('../config/plans');
-const {
-  createUser,
-  getUserByEmail,
-  saveProfile,
-} = require('../services/storage-service');
-
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  sameSite: 'lax',
-  secure: env.isProduction,
-  path: '/',
-};
-
-function signup(req, res) {
-  const id = crypto.randomUUID();
-  const createdAt = new Date().toISOString();
-  const user = {
-    id,
-    name: req.body.name,
-    email: req.body.email.toLowerCase(),
-    passwordHash: passwordHash(req.body.password),
-    plan: 'free',
-    credits: PLAN_CREDITS.free,
-    brandVoice: { brandName: '', tagline: '', tone: 'simple and practical' },
-    generations: [],
-    createdAt,
-  };
-
-  return asyncHandler(async () => {
-    const existing = await getUserByEmail(user.email);
-    if (existing) {
-      return res.status(409).json({ success: false, message: 'Email already exists.' });
-    }
-await createUser(user);
-    const token = signSession(user.id, env.SESSION_SECRET);
-    res.cookie('session', token, COOKIE_OPTIONS);
-    return res.status(201).json({ success: true, token, user: publicUser(user) });
-  })(req, res);
-}
-
-function login(req, res) {
-  return asyncHandler(async () => {
-    const user = await getUserByEmail(req.body.email.toLowerCase());
-    if (!user || !verifyPassword(req.body.password, user.passwordHash)) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
-    }
-    const token = signSession(user.id, env.SESSION_SECRET);
-    res.cookie('session', token, COOKIE_OPTIONS);
-    return res.status(200).json({ success: true, user: publicUser(user) });
-  })(req, res);
-}
-
-function logout(req, res) {
-  res.clearCookie('session', { path: '/' });
-  return res.status(200).json({ success: true });
-}
+const { publicUser } = require('../utils/helpers');
+const { saveProfile } = require('../services/storage-service');
 
 function me(req, res) {
   if (!req.user) {
@@ -86,4 +34,4 @@ async function updateProfile(req, res) {
   return res.status(200).json({ success: true, user: publicUser(updated) });
 }
 
-module.exports = { signup, login, logout, me, updateProfile };
+module.exports = { me, updateProfile: asyncHandler(updateProfile) };

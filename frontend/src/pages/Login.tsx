@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
@@ -8,30 +8,79 @@ import { ApiError } from '@/lib/api';
 import PublicHeader from '@/components/PublicHeader';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, loginWithGoogle, resendVerification } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const from = (location.state as { from?: string } | null)?.from || '/dashboard';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [showResend, setShowResend] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (!error) return;
+    const messages: Record<string, string> = {
+      oauth_denied: 'Google sign-in was cancelled.',
+      auth_failed: 'Google sign-in failed. Please try again.',
+      no_session: 'Could not complete sign-in. Please try again.',
+    };
+    toast({ title: 'Sign-in issue', description: messages[error] || 'Please try again.', tone: 'error' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password) return;
     setSubmitting(true);
+    setShowResend(false);
     try {
       const user = await login(email.trim(), password);
       toast({ title: 'Welcome back!', description: user.email, tone: 'success' });
       navigate(from, { replace: true });
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : 'Please try again.';
+      const msg = err instanceof Error ? err.message : err instanceof ApiError ? err.message : 'Please try again.';
       toast({ title: 'Login failed', description: msg, tone: 'error' });
+      if (msg.toLowerCase().includes('verify your email')) setShowResend(true);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const onResend = async () => {
+    if (!email.trim()) return;
+    setResending(true);
+    try {
+      await resendVerification(email.trim());
+      toast({ title: 'Verification email sent', description: `Check ${email.trim()}.`, tone: 'success' });
+    } catch (err) {
+      toast({
+        title: 'Could not resend',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        tone: 'error',
+      });
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const onGoogle = async () => {
+    setGoogleLoading(true);
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      toast({
+        title: 'Google sign-in failed',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        tone: 'error',
+      });
+      setGoogleLoading(false);
     }
   };
 
@@ -48,13 +97,15 @@ export default function Login() {
           <p className="mt-1 text-sm text-text-secondary">Login to continue creating</p>
         </div>
 
-        <a
-          href={`${import.meta.env.VITE_API_URL || ''}/api/auth/google`}
-          className="btn-secondary flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold"
+        <button
+          type="button"
+          onClick={onGoogle}
+          disabled={googleLoading}
+          className="btn-secondary flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
         >
           <GoogleIcon />
-          Continue with Google
-        </a>
+          {googleLoading ? 'Redirecting…' : 'Continue with Google'}
+        </button>
 
         <div className="my-5 flex items-center gap-3 text-xs text-text-tertiary">
           <span className="h-px flex-1 bg-border" />
@@ -83,9 +134,14 @@ export default function Login() {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="password" className="block text-xs font-medium text-text-secondary">
-              Password
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className="block text-xs font-medium text-text-secondary">
+                Password
+              </label>
+              <Link to="/forgot-password" className="text-xs font-medium text-brand hover:underline">
+                Forgot password?
+              </Link>
+            </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" aria-hidden="true" />
               <input
@@ -118,6 +174,17 @@ export default function Login() {
             {submitting ? 'Logging in…' : 'Login'}
           </button>
         </form>
+
+        {showResend && (
+          <button
+            type="button"
+            onClick={onResend}
+            disabled={resending}
+            className="mt-4 w-full text-center text-xs font-medium text-brand hover:underline disabled:opacity-60"
+          >
+            {resending ? 'Sending…' : "Didn't get the email? Resend verification link"}
+          </button>
+        )}
 
         <p className="mt-6 text-center text-sm text-text-secondary">
           No account?{' '}

@@ -8,11 +8,19 @@
 create extension if not exists "pgcrypto";
 
 -- ---------- USERS ----------
+-- `id` is the Supabase Auth user id (auth.users.id) — identity itself
+-- (email, password, Google OAuth) lives in Supabase Auth, not here.
+-- This table only holds app-level data: plan, credits, brand voice, etc.
+-- See migrations/002_supabase_auth_migration.sql for the auto-create
+-- trigger and RLS policies (run automatically the first time via the
+-- backend too, so the trigger is belt-and-suspenders).
 create table if not exists users (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key references auth.users(id) on delete cascade,
   email text unique not null,
   name text default 'Creator',
-  password_hash text not null,
+  password_hash text,  -- unused (Supabase Auth owns passwords); kept for legacy data migrated from v10 and earlier
+  avatar_url text,
+  provider text default 'email',
   plan text default 'free',
   credits integer default 10,
   brand_voice jsonb default '{}'::jsonb,

@@ -1,5 +1,8 @@
 # PostReady AI v10 — Audit Report
 
+> ⚠️ Historical snapshot (v10). Auth has since been rewritten around
+> Supabase Auth — see `/AUTH_AUDIT.md` (repo root) for the current audit.
+
 Generated during the v9 → v10 production hardening refactor.
 
 ---

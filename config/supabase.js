@@ -46,4 +46,27 @@ function hasSupabaseKeys() {
   return getClients().enabled;
 }
 
-module.exports = { getClients, hasSupabaseKeys };
+/**
+ * Verify a Supabase access token (the JWT issued by Supabase Auth after
+ * login/signup/OAuth) and return the Supabase auth user, or null if the
+ * token is missing/invalid/expired.
+ *
+ * Uses the service-role client so this works even if RLS is enabled and
+ * regardless of anon-key restrictions.
+ */
+async function getSupabaseUserFromToken(accessToken) {
+  if (!accessToken) return null;
+  const { enabled, supabaseService, supabaseAnon } = getClients();
+  if (!enabled) return null;
+  const client = supabaseService || supabaseAnon;
+  if (!client) return null;
+  try {
+    const { data, error } = await client.auth.getUser(accessToken);
+    if (error || !data?.user) return null;
+    return data.user;
+  } catch {
+    return null;
+  }
+}
+
+module.exports = { getClients, hasSupabaseKeys, getSupabaseUserFromToken };
