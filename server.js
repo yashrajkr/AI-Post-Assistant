@@ -29,6 +29,12 @@ ensureDataFiles();
 const app = express();
 const PORT = env.PORT;
 
+// Render (and most PaaS hosts) sit the app behind a reverse proxy, so Express
+// must be told to trust the X-Forwarded-* headers it sets. Without this,
+// express-rate-limit throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR on every
+// request and can't identify clients by real IP.
+app.set('trust proxy', 1);
+
 // --- CORS origin resolver ---
 // Allows: (a) configured ALLOWED_ORIGINS, (b) chrome-extension://* (any extension id)
 function corsOrigin(origin, callback) {
