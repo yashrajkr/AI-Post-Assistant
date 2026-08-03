@@ -1,4 +1,4 @@
-# AI Post Assistant v16 (Final Build — "ff")
+# AI Post Assistant 
 
 Production-hardened SaaS for content creators — an **AI Content Operating System** with 7+ feature modules.
 
