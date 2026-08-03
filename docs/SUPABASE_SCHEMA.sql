@@ -7,12 +7,22 @@
 -- Required for gen_random_uuid()
 create extension if not exists "pgcrypto";
 
+-- ------------------------------------------------------------
+-- MIGRATION for an already-created project (users table exists
+-- with `password_hash text not null`): run this once to allow
+-- Google-only accounts without dropping/recreating the table.
+--   alter table users alter column password_hash drop not null;
+-- ------------------------------------------------------------
+
 -- ---------- USERS ----------
+-- password_hash is nullable: Google-only accounts (see
+-- controllers/google-auth-controller.js) are created with passwordHash: null
+-- and can never log in via the password form.
 create table if not exists users (
   id uuid primary key default gen_random_uuid(),
   email text unique not null,
   name text default 'Creator',
-  password_hash text not null,
+  password_hash text,
   plan text default 'free',
   credits integer default 10,
   brand_voice jsonb default '{}'::jsonb,

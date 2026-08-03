@@ -21,9 +21,13 @@ const { PLAN_CREDITS } = require('../config/plans');
 const { createUser, getUserByEmail } = require('../services/storage-service');
 const logger = require('../utils/logger');
 
+// Frontend (*.vercel.app) and backend (*.onrender.com) are different sites,
+// so both the session cookie and the short-lived g_oauth_state CSRF cookie
+// need SameSite=None (+ Secure) in production for the browser to send/accept
+// them across that boundary. 'lax' is kept for local dev (http://localhost).
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  sameSite: 'lax',
+  sameSite: env.isProduction ? 'none' : 'lax',
   secure: env.isProduction,
   path: '/',
 };
@@ -66,7 +70,7 @@ async function callback(req, res) {
   }
 
   const expectedState = req.cookies?.g_oauth_state;
-  res.clearCookie('g_oauth_state', { path: '/' });
+  res.clearCookie('g_oauth_state', { path: '/', sameSite: COOKIE_OPTIONS.sameSite, secure: COOKIE_OPTIONS.secure });
   if (!code || !state || !expectedState || state !== expectedState) {
     logger.warn('[google-auth] callback rejected: missing/mismatched state.');
     return res.redirect(`${env.FRONTEND_URL}/login?error=google_invalid_state`);

@@ -56,10 +56,13 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: GOOGLE_REDIRECT_URI
-        # MUST point at the frontend (Vercel) origin, not this Render domain —
-        # frontend/vercel.json rewrites /api/* here, keeping the session cookie
-        # same-origin for the browser. Register this exact URL in Google Cloud
-        # Console under "Authorized redirect URIs".
-        value: https://ai-post-assistant.vercel.app/api/auth/google/callback
+        # Points at THIS backend's own callback route (the frontend calls the
+        # backend directly via VITE_API_URL — see frontend/src/lib/api.ts —
+        # there is no same-origin proxy). Replace the host below with your
+        # real Render service URL, and register the exact same value in
+        # Google Cloud Console under "Authorized redirect URIs". Cross-site
+        # cookie delivery back to the Vercel frontend works because the
+        # session cookie is set with SameSite=None; Secure in production.
+        value: https://ai-post-assistant-backend.onrender.com/api/auth/google/callback
       - key: FRONTEND_URL
         value: https://ai-post-assistant.vercel.app
