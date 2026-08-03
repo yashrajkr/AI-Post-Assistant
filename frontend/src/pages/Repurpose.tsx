@@ -35,7 +35,7 @@ export default function Repurpose() {
   });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-6">
       <PageHeader badge="Module 6 · AI Repurposer" title="Repurpose to 6 platforms" subtitle="Turn one piece of content into platform-optimized posts." />
 
       <Card className="p-6">

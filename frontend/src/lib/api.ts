@@ -2,7 +2,10 @@
  * Typed fetch wrapper for the AI Post Assistant Express backend.
  *
  * The backend runs on http://localhost:3000 in dev (see ../server.js).
- * In production, set VITE_API_URL to the public backend URL.
+ * In production, set VITE_API_URL to the public Render backend URL — this is
+ * the only mechanism used to reach the backend. frontend/vercel.json has no
+ * /api rewrite proxy (removed — it was a stale, unused placeholder); it only
+ * handles the SPA fallback route.
  *
  * Auth is stateless: every request carries the current Supabase Auth
  * access token as `Authorization: Bearer <token>`. This works identically

@@ -46,7 +46,7 @@ export default function Pricing() {
       <div className="pointer-events-none absolute top-1/3 -right-32 h-96 w-96 rounded-full bg-secondary/20 blur-3xl" />
 
       <PublicHeader />
-      <div className="relative z-10 mx-auto max-w-6xl space-y-8 px-4 py-12">
+      <div className="relative z-10 mx-auto max-w-7xl space-y-8 px-4 py-12">
         <PageHeader
           badge="Pricing"
           title="Simple pricing for every creator"

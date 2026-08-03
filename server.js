@@ -34,6 +34,12 @@ ensureDataFiles();
 const app = express();
 const PORT = env.PORT;
 
+// Render (and most PaaS hosts) sit the app behind a reverse proxy, so Express
+// must be told to trust the X-Forwarded-* headers it sets. Without this,
+// express-rate-limit throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR on every
+// request and can't identify clients by real IP.
+app.set('trust proxy', 1);
+
 // --- CORS origin resolver ---
 // Allows: (a) configured ALLOWED_ORIGINS, (b) chrome-extension://* (any extension id)
 function corsOrigin(origin, callback) {
@@ -83,6 +89,18 @@ app.use(attachUser);
 
 // --- API routes ---
 buildRoutes(app);
+
+// --- Root: simple API info response (this service is API-only; ---
+// --- the actual product frontend is deployed separately on Vercel) ---
+app.get('/', (req, res) => {
+  res.json({
+    name: env.APP_NAME,
+    status: 'ok',
+    message: 'This is the AI Post Assistant API. The web app is served separately.',
+    frontend: env.FRONTEND_URL || undefined,
+    health: '/api/health',
+  });
+});
 
 // --- 404 + error handler (last) — pure API, so this applies to every route ---
 app.use(notFound);

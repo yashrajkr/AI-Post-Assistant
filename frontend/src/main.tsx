@@ -14,3 +14,13 @@ createRoot(document.getElementById('root')!).render(
     </AuthProvider>
   </StrictMode>
 );
+
+// Register the service worker — required by Chrome/Edge for the app to be
+// installable (fires `beforeinstallprompt`, see InstallPrompt.tsx).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Installability just won't trigger; the app still works normally.
+    });
+  });
+}

@@ -7,6 +7,13 @@
 -- Required for gen_random_uuid()
 create extension if not exists "pgcrypto";
 
+-- ------------------------------------------------------------
+-- MIGRATION for an already-created project: if this project predates the
+-- Supabase Auth migration (`password_hash text not null`, no `avatar_url`/
+-- `provider` columns, `id` not linked to auth.users), run
+-- migrations/002_supabase_auth_migration.sql once instead of this file.
+-- ------------------------------------------------------------
+
 -- ---------- USERS ----------
 -- `id` is the Supabase Auth user id (auth.users.id) — identity itself
 -- (email, password, Google OAuth) lives in Supabase Auth, not here.

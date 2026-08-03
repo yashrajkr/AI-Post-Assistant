@@ -227,7 +227,7 @@ export default function Landing() {
       {/* ============================================================ */}
       {/* Hero */}
       {/* ============================================================ */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 pt-12 pb-20 md:pt-24 md:pb-32">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pt-12 pb-20 md:pt-24 md:pb-32">
         <div className="grid items-center gap-12 md:grid-cols-2">
           <motion.div {...fadeUp} transition={{ duration: 0.5 }}>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand">
@@ -332,7 +332,7 @@ export default function Landing() {
       {/* ============================================================ */}
       {/* Stats */}
       {/* ============================================================ */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 py-12">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 py-12">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {STATS.map((s, i) => {
             const Icon = s.icon;
@@ -356,7 +356,7 @@ export default function Landing() {
       {/* ============================================================ */}
       {/* Features (8 cards) */}
       {/* ============================================================ */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 py-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 py-20">
         <div className="mb-12 text-center">
           <span className="text-xs font-semibold uppercase tracking-wider text-brand">Features</span>
           <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl">
@@ -390,7 +390,7 @@ export default function Landing() {
       {/* ============================================================ */}
       {/* How it works (3 steps) */}
       {/* ============================================================ */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 py-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 py-20">
         <div className="mb-12 text-center">
           <span className="text-xs font-semibold uppercase tracking-wider text-brand">How it works</span>
           <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl">
@@ -425,7 +425,7 @@ export default function Landing() {
       {/* ============================================================ */}
       {/* 7 Modules showcase */}
       {/* ============================================================ */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 py-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 py-20">
         <div className="mb-12 text-center">
           <span className="text-xs font-semibold uppercase tracking-wider text-brand">AI Content OS</span>
           <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl">
@@ -461,7 +461,7 @@ export default function Landing() {
       {/* ============================================================ */}
       {/* Testimonials */}
       {/* ============================================================ */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 py-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 py-20">
         <div className="mb-12 text-center">
           <span className="text-xs font-semibold uppercase tracking-wider text-brand">Loved by creators</span>
           <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl">
@@ -524,7 +524,7 @@ export default function Landing() {
       {/* ============================================================ */}
       {/* Security / Trust */}
       {/* ============================================================ */}
-      <section className="relative z-10 mx-auto max-w-6xl px-4 py-20">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 py-20">
         <div className="grid gap-6 md:grid-cols-3">
           {[
             { icon: Shield, title: 'Bank-grade security', desc: 'PBKDF2 password hashing, HMAC-signed sessions, HttpOnly cookies, HTTPS everywhere.' },

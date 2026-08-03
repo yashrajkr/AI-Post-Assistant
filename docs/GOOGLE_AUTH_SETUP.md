@@ -18,8 +18,22 @@ friendly message.
 3. Click **Create Credentials → OAuth client ID**.
 4. Application type: **Web application**.
 5. Under **Authorized redirect URIs**, add:
-   - Local dev: `http://localhost:3000/api/auth/google/callback`
-   - Production: `https://your-backend-domain.com/api/auth/google/callback`
+   - Local dev: `http://localhost:3001/api/auth/google/callback`
+   - Production: `https://your-backend.onrender.com/api/auth/google/callback`
+     (your real Render service URL)
+
+   **Note on dev vs. prod:** in dev, the redirect URI points at the Vite dev
+   server (`:3001`), which proxies `/api/*` to this backend (see
+   `frontend/vite.config.ts`) — same-origin, so the callback cookie just
+   works. In production, the frontend calls this backend **directly** via
+   `VITE_API_URL` (see `frontend/src/lib/api.ts` — there's no proxy in
+   `frontend/vercel.json`), so the redirect URI points at the backend's own
+   domain instead. That makes the session cookie genuinely cross-site
+   (`*.vercel.app` ↔ `*.onrender.com`), which is why `COOKIE_OPTIONS` in
+   `controllers/auth-controller.js` and `controllers/google-auth-controller.js`
+   set `sameSite: 'none'` (with `secure: true`) when `NODE_ENV=production` —
+   without that, the browser silently drops the cookie and login "succeeds"
+   but `/api/me` still comes back logged out.
 6. Save. Copy the **Client ID** and **Client secret**.
 
 If you see this project has no OAuth consent screen configured yet, you'll be
@@ -31,10 +45,17 @@ a test user is enough to start.
 In `.env` (local) or your Render environment variables (production):
 
 ```env
+# Local dev
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback   # or your prod URL
-FRONTEND_URL=http://localhost:3001                                   # or your Vercel URL
+GOOGLE_REDIRECT_URI=http://localhost:3001/api/auth/google/callback
+FRONTEND_URL=http://localhost:3001
+
+# Production (Render env vars)
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_REDIRECT_URI=https://your-backend.onrender.com/api/auth/google/callback
+FRONTEND_URL=https://ai-post-assistant.vercel.app
 ```
 
 Restart the server. The startup log should stop warning about missing Google
@@ -65,11 +86,16 @@ OAuth vars.
 | Redirected to `/login?error=google_oauth_not_configured` | Env vars missing/empty | Check `.env` / Render dashboard |
 | Redirected to `/login?error=google_invalid_state` | Cookie blocked (e.g. testing across two different origins without HTTPS) or the link was opened twice | Retry from a fresh `/login` page |
 | Works locally, fails in production | `GOOGLE_REDIRECT_URI` and `FRONTEND_URL` still point at `localhost` | Update both env vars on Render to your real domains, and add the prod redirect URI in Google Cloud Console |
+| Redirects to `/dashboard` but the app still shows logged out | `sameSite` on the session cookie isn't `'none'` in production, so the browser drops it on the cross-site request from `*.vercel.app` to `*.onrender.com` | Confirm `NODE_ENV=production` is set on Render — `COOKIE_OPTIONS` derives `sameSite`/`secure` from `env.isProduction` |
+| `redirect_uri_mismatch` even though the value "looks right" | `GOOGLE_REDIRECT_URI` on Render doesn't exactly match what's registered in Google Cloud Console (e.g. you changed the Render service name/URL after registering) | Re-check the exact Render URL and update both places to match |
 
 ## 5. Production checklist
 
-- [ ] Redirect URI in Google Cloud Console matches `GOOGLE_REDIRECT_URI` exactly
-- [ ] `FRONTEND_URL` points at your real Vercel domain (no trailing slash)
+- [ ] Redirect URI in Google Cloud Console matches `GOOGLE_REDIRECT_URI` on Render exactly (your real `*.onrender.com` URL + `/api/auth/google/callback`)
+- [ ] `FRONTEND_URL=https://ai-post-assistant.vercel.app` (no trailing slash) on Render
+- [ ] `ALLOWED_ORIGINS=https://ai-post-assistant.vercel.app` on Render
+- [ ] `NODE_ENV=production` on Render, so `COOKIE_OPTIONS` uses `sameSite: 'none'` + `secure: true` — required for the cross-site cookie to survive the `*.vercel.app` → `*.onrender.com` round trip
+- [ ] `VITE_API_URL` set on Vercel to the real Render backend URL (the frontend calls it directly — see `frontend/src/lib/api.ts`)
 - [ ] OAuth consent screen is out of "Testing" mode if you want any Google
       user (not just added test users) to be able to sign in
 - [ ] `SESSION_SECRET` is a real random value (not the dev default)

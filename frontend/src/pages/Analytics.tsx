@@ -111,7 +111,7 @@ export default function Analytics() {
   const isEmpty = (rows?.length ?? 0) === 0 && !analytics;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6">
       <PageHeader badge="Analytics" title="Your usage data" subtitle="Understand how you're using PostReady AI." />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

@@ -32,7 +32,7 @@ export default function Calendar() {
   const allText = days.map((d) => `Day ${d.day} [${d.platform}] ${d.topic} — ${d.hook} (${d.format} @ ${d.time})`).join('\n');
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-6">
       <PageHeader badge="v2 · AI Content Calendar" title="Content calendar generator" subtitle="Generate a multi-day content plan in seconds." />
 
       <Card className="p-6">
